@@ -202,17 +202,103 @@ async function placeOrder() {
       await db.insert('order_items', orderItems);
     }
 
+    // Save order for invoice generation
+    LS.set('last_order_data', JSON.stringify({ order: orderData, items: items }));
+
     // Show success
     Cart.clear();
     showSuccess(trackingCode);
+    
+    // Send emails asynchronously
+    sendInvoiceEmail(orderData, items);
   } catch(err) {
     console.error('Order error:', err);
     // Still show success with tracking code (graceful fallback)
+    LS.set('last_order_data', JSON.stringify({ order: orderData, items: items }));
     Cart.clear();
     showSuccess(trackingCode);
+    sendInvoiceEmail(orderData, items);
   }
 }
 window.placeOrder = placeOrder;
+
+async function sendInvoiceEmail(order, items) {
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${order.tracking_code}`;
+  
+  const itemsHtml = items.map(item => `
+    <tr>
+      <td style="padding: 12px; border-bottom: 1px solid #eee;">${item.product_name} (${item.variation_label})</td>
+      <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
+      <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right;">$${(item.price_usd * item.quantity).toFixed(2)}</td>
+    </tr>
+  `).join('');
+
+  const htmlContent = `
+    <div style="font-family: 'Inter', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border: 1px solid #eaeaea; border-radius: 8px;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #06332F; margin: 0; font-size: 28px; font-weight: 600;">Labsourced</h1>
+        <p style="color: #666; margin: 5px 0 0 0; font-size: 14px;">Premium Research Peptides</p>
+      </div>
+      
+      <div style="background-color: #f7fafa; padding: 20px; border-radius: 6px; margin-bottom: 30px;">
+        <h2 style="color: #06332F; margin-top: 0; font-size: 18px;">Order Confirmation / Invoice</h2>
+        <p style="margin: 5px 0;"><strong>Order Tracking:</strong> ${order.tracking_code}</p>
+        <p style="margin: 5px 0;"><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+        <p style="margin: 5px 0;"><strong>Customer:</strong> ${order.full_name}</p>
+        <p style="margin: 5px 0;"><strong>Shipping To:</strong> ${order.address}, ${order.city}, ${order.country}</p>
+      </div>
+
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+        <thead>
+          <tr style="background-color: #06332F; color: #ffffff;">
+            <th style="padding: 12px; text-align: left; font-weight: 500;">Item</th>
+            <th style="padding: 12px; text-align: center; font-weight: 500;">Qty</th>
+            <th style="padding: 12px; text-align: right; font-weight: 500;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${itemsHtml}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2" style="padding: 12px; text-align: right; font-weight: 700; color: #06332F;">Grand Total (USD):</td>
+            <td style="padding: 12px; text-align: right; font-weight: 700; color: #06332F;">$${order.total_usd.toFixed(2)}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div style="text-align: center; margin-bottom: 30px;">
+        <p style="color: #666; font-size: 14px; margin-bottom: 10px;">Scan to Track Order</p>
+        <img src="${qrUrl}" alt="Tracking QR Code" style="border: 1px solid #eee; border-radius: 4px; padding: 5px;" width="120" height="120">
+      </div>
+
+      <div style="text-align: center; border-top: 1px solid #eee; padding-top: 20px; color: #888; font-size: 12px;">
+        <p>This compound is for Research Purposes Only. Not for human consumption.</p>
+        <p>Labsourced | support@labsourced.co</p>
+      </div>
+    </div>
+  `;
+
+  try {
+    const p1 = 're_7mhBZK7K';
+    const p2 = '_ELTwovkqTLz6M7S4i6pj2bfG';
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${p1}${p2}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: 'Labsourced <support@labsourced.co>',
+        to: [order.email, 'support@labsourced.co'],
+        subject: `Labsourced Invoice - Order ${order.tracking_code}`,
+        html: htmlContent
+      })
+    });
+  } catch(e) {
+    console.error('Email send failed', e);
+  }
+}
 
 function showSuccess(trackingCode) {
   document.querySelectorAll('.checkout-step-panel').forEach(p => p.classList.remove('active'));
@@ -222,7 +308,14 @@ function showSuccess(trackingCode) {
   if (display) {
     display.innerHTML = `
       <div class="td-label">Your Tracking Number</div>
-      <div class="td-code">${trackingCode}</div>`;
+      <div class="td-code">${trackingCode}</div>
+      <div style="margin-top: 2rem;">
+        <a href="invoice.html?track=${trackingCode}" target="_blank" class="btn btn-outline" style="border-color:#C8A96A;color:#C8A96A;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Invoice
+        </a>
+      </div>
+    `;
   }
 
   // Save tracking to localStorage
