@@ -71,13 +71,59 @@ function renderProductDetail(product, reviews) {
   const badge = product.is_bestseller ? 'Best Seller' : (product.is_featured ? 'Featured' : '');
   const avgRating = reviews.length ? (reviews.reduce((s,r) => s + r.rating, 0) / reviews.length).toFixed(1) : '5.0';
   const specs = product.specifications || {};
+  const coas = product.coa_urls || [];
+
+  // Build COA strip HTML
+  const coaStripHtml = coas.length > 0 ? `
+    <div class="pd-coa-strip" id="pdCoaStrip">
+      <div class="pd-coa-strip-label">
+        📋 COA Documents <span>${coas.length}</span>
+      </div>
+      ${coas.map((url, idx) => {
+        const isPdf = url.toLowerCase().includes('.pdf') || url.startsWith('data:application/pdf');
+        const isDataUrl = url.startsWith('data:');
+        const fileType = isPdf ? 'PDF Certificate' : 'Image Certificate';
+        const iconSvg = isPdf
+          ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`
+          : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+        return `
+          <div class="pd-coa-thumb" id="pdCoaThumb${idx}" onclick="switchToCoa(${idx})" title="View COA Document ${idx + 1}">
+            <div class="pd-coa-thumb-icon${isPdf ? '' : ' img-type'}">${iconSvg}</div>
+            <div class="pd-coa-thumb-info">
+              <div class="pd-coa-thumb-name">COA Document ${idx + 1}</div>
+              <div class="pd-coa-thumb-type">${fileType}</div>
+            </div>
+            <div class="pd-coa-thumb-open">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          </div>`;
+      }).join('')}
+    </div>` : '';
 
   content.className = 'product-detail-layout';
   content.innerHTML = `
     <div class="pd-image-side">
-      <div class="pd-main-image-wrap">
-        <img src="${imgSrc}" alt="${product.name}" id="pdMainImage" onerror="this.src='assets/images/bpc157.png'">
+      <div class="pd-back-hint" id="pdBackHint">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Viewing COA — tap product image below to go back
       </div>
+      <div class="pd-main-display" id="pdMainDisplay">
+        <span class="pd-coa-frame-label" id="pdCoaFrameLabel">COA Document</span>
+        <img src="${imgSrc}" alt="${product.name}" id="pdMainImage" class="pd-display-img" onerror="this.src='assets/images/bpc157.png'">
+        <div class="pd-coa-frame-wrap" id="pdCoaFrameWrap">
+          <!-- COA content rendered here dynamically -->
+        </div>
+      </div>
+      ${coas.length > 0 ? `
+      <div class="pd-product-thumb" id="pdProductThumb" onclick="switchToProduct()" title="Back to product view" style="display:none;">
+        <img src="${imgSrc}" class="pd-pt-img" alt="${product.name}" onerror="this.src='assets/images/bpc157.png'">
+        <div>
+          <div class="pd-product-thumb-label">${product.name}</div>
+          <div class="pd-product-thumb-sub">Tap to view product image</div>
+        </div>
+      </div>
+      ` : ''}
+      ${coaStripHtml}
     </div>
     <div class="pd-info-side">
       ${badge ? `<div class="pd-badge">${badge}</div>` : ''}
@@ -111,31 +157,6 @@ function renderProductDetail(product, reviews) {
       </div>
 
       <button class="btn btn-primary pd-add-btn" onclick="addProductToCart()">🛒 ${t('add_to_cart')}</button>
-
-      ${product.coa_urls && product.coa_urls.length > 0 ? `
-      <div class="pd-coa-section" style="margin: 1.5rem 0; padding: 1.25rem; background: rgba(200,169,106,0.05); border: 1px solid rgba(200,169,106,0.25); border-radius: 12px;">
-        <h4 style="font-size:1rem; color:var(--primary-dark-green); margin-bottom: 0.75rem; display:flex; align-items:center; justify-space-between; gap:8px;">
-          <span style="display:inline-flex;align-items:center;gap:8px;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            Certificates of Analysis (COA)
-          </span>
-          <span style="font-size:0.8rem; background:rgba(200,169,106,0.2); color:#06332F; padding:2px 8px; border-radius:12px; font-weight:600;">${product.coa_urls.length} Document${product.coa_urls.length > 1 ? 's' : ''}</span>
-        </h4>
-        <div style="display:flex; flex-direction:column; gap:0.6rem;">
-          ${product.coa_urls.map((url, idx) => `
-            <div style="display:flex; align-items:center; justify-content:space-between; background:#ffffff; padding:10px 14px; border-radius:8px; border:1px solid rgba(200,169,106,0.3); box-shadow:0 2px 4px rgba(0,0,0,0.02);">
-              <span style="font-size:0.88rem; font-weight:600; color:var(--primary-dark-green); display:inline-flex; align-items:center; gap:6px;">
-                📄 COA Document #${idx + 1}
-              </span>
-              <a href="${url}" target="_blank" download="COA_Document_${idx + 1}" style="display:inline-flex; align-items:center; gap:6px; color:#C8A96A; font-weight:600; font-size:0.84rem; text-decoration:none; padding:5px 12px; background:rgba(200,169,106,0.12); border-radius:6px; transition:all 0.2s ease;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                View / Download PDF
-              </a>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-      ` : ''}
 
       <div class="pd-tabs">
         <div class="pd-tab-nav">
@@ -173,6 +194,10 @@ function renderProductDetail(product, reviews) {
       </div>
     </div>`;
 
+  // Store COA urls for switcher
+  window._pdCoaUrls = coas;
+
+
   // Render reviews
   renderReviews(reviews);
   document.getElementById('reviewsSection').style.display = 'block';
@@ -181,6 +206,65 @@ function renderProductDetail(product, reviews) {
   initStarRating();
   updateFreeShippingBar();
 }
+
+// =============================================
+// COA GALLERY SWITCHER
+// =============================================
+function switchToCoa(idx) {
+  const coas = window._pdCoaUrls || [];
+  if (!coas[idx]) return;
+
+  const url = coas[idx];
+  const display = document.getElementById('pdMainDisplay');
+  const frameWrap = document.getElementById('pdCoaFrameWrap');
+  const label = document.getElementById('pdCoaFrameLabel');
+  const backHint = document.getElementById('pdBackHint');
+  const productThumb = document.getElementById('pdProductThumb');
+
+  if (!display || !frameWrap) return;
+
+  // Mark all COA thumbs — clear active, set active on tapped one
+  document.querySelectorAll('.pd-coa-thumb').forEach((t, i) => {
+    t.classList.toggle('active', i === idx);
+  });
+
+  // Determine type
+  const isPdf = url.toLowerCase().includes('.pdf') || url.startsWith('data:application/pdf');
+  const isImg = !isPdf;
+
+  // Build inner content
+  if (isPdf) {
+    frameWrap.innerHTML = `<iframe src="${url}" title="COA Document ${idx + 1}" style="width:100%;height:100%;border:none;"></iframe>`;
+  } else {
+    frameWrap.innerHTML = `<img class="coa-img-preview" src="${url}" alt="COA Document ${idx + 1}" onerror="this.style.display='none'">`;
+  }
+
+  if (label) label.textContent = `COA Document ${idx + 1}`;
+
+  // Activate coa-active class (CSS transitions handle the fade)
+  display.classList.add('coa-active');
+
+  // Show back hint and product thumbnail
+  if (backHint) backHint.classList.add('visible');
+  if (productThumb) productThumb.style.display = 'flex';
+}
+window.switchToCoa = switchToCoa;
+
+function switchToProduct() {
+  const display = document.getElementById('pdMainDisplay');
+  const frameWrap = document.getElementById('pdCoaFrameWrap');
+  const backHint = document.getElementById('pdBackHint');
+  const productThumb = document.getElementById('pdProductThumb');
+
+  if (display) display.classList.remove('coa-active');
+  if (frameWrap) frameWrap.innerHTML = '';
+  if (backHint) backHint.classList.remove('visible');
+  if (productThumb) productThumb.style.display = 'none';
+
+  // Deactivate all COA thumbs
+  document.querySelectorAll('.pd-coa-thumb').forEach(t => t.classList.remove('active'));
+}
+window.switchToProduct = switchToProduct;
 
 function selectPdVar(btn) {
   document.querySelectorAll('.pd-var-btn').forEach(b => b.classList.remove('active'));
