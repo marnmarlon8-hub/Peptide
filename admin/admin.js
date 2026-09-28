@@ -111,16 +111,40 @@ function showSyncBanner(count) {
     color: white; padding: 12px 20px; text-align: center;
     font-family: 'Inter', sans-serif; font-size: 0.88rem; font-weight: 500;
     display: flex; align-items: center; justify-content: center; gap: 12px;
-    box-shadow: 0 4px 20px rgba(231,76,60,0.4);
+    flex-wrap: wrap; box-shadow: 0 4px 20px rgba(231,76,60,0.4);
   `;
   banner.innerHTML = `
     ⚠️ <strong>${count} item(s) saved LOCALLY ONLY</strong> — not visible on other devices.
     <button onclick="pushLocalToSupabase()" style="background:white;color:#e74c3c;border:none;padding:5px 14px;border-radius:6px;cursor:pointer;font-weight:700;font-size:0.83rem;">🔄 Sync to Cloud Now</button>
-    <button onclick="showRlsFixModal()" style="background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.5);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:0.83rem;">Fix Database →</button>
+    <button onclick="clearLocalCache()" style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.5);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:0.83rem;" title="Delete locally-saved items and start fresh">🗑 Clear Local Cache</button>
     <button onclick="document.getElementById('syncBanner').remove()" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:1.1rem;padding:0 4px;">✕</button>
   `;
   document.body.prepend(banner);
 }
+
+function clearLocalCache() {
+  if (!confirm('This will delete the locally-saved products/categories on THIS device.\n\nUse this if you want to start fresh and add products directly to the cloud database.\n\nAre you sure?')) return;
+  // Clear all local product/category overrides
+  ['products', 'categories', 'product_variations'].forEach(table => {
+    localStorage.removeItem('ls_custom_' + table);
+  });
+  // Also clear any cached product images (localStorage base64 images)
+  const keysToRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && (key.startsWith('admin_prod_img_') || key.startsWith('admin_cat_img_'))) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach(k => localStorage.removeItem(k));
+
+  document.getElementById('syncBanner')?.remove();
+  showToast('✅ Local cache cleared! You can now add products fresh — they will save to the cloud database.');
+  loadAllData();
+}
+window.clearLocalCache = clearLocalCache;
+
+
 
 async function pushLocalToSupabase() {
   const tables = ['categories', 'products', 'product_variations'];
