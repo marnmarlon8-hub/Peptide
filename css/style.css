@@ -175,12 +175,16 @@ ul {
 }
 
 .logo a {
-    font-family: var(--font-heading);
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--primary-dark-green);
-    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
 }
+
+.nav-logo {
+    height: 32px;
+    width: auto;
+    object-fit: contain;
+}
+
 
 .desktop-nav .nav-links {
     display: flex;
