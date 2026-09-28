@@ -62,10 +62,28 @@ const db = {
           return true;
         });
       }
-      return merged;
     }
 
-    return dbData || [];
+    let finalData = dbData || [];
+    if (localItems.length > 0) {
+      finalData = merged;
+    }
+    
+    if (table === 'products') {
+      finalData.forEach(item => {
+        if (item.detailed_description && typeof item.detailed_description === 'string' && item.detailed_description.includes('<!-- COA_DATA:')) {
+          const match = item.detailed_description.match(/<!-- COA_DATA:(.*?) -->/);
+          if (match) {
+            try {
+              if (!item.coa_urls || item.coa_urls.length === 0) item.coa_urls = JSON.parse(match[1]);
+              item.detailed_description = item.detailed_description.replace(match[0], '').trim();
+            } catch(e) {}
+          }
+        }
+      });
+    }
+
+    return finalData;
   },
 
   async insert(table, data) {

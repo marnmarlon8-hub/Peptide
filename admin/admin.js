@@ -67,13 +67,29 @@ async function adminFetch(table, params = {}) {
   }
 
   const localItems = getCustomLocal(table);
+  let finalData = dbData || [];
   if (localItems.length > 0) {
     const map = new Map();
     (dbData || []).forEach(item => map.set(item.id, item));
     localItems.forEach(item => map.set(item.id, item));
-    return Array.from(map.values());
+    finalData = Array.from(map.values());
   }
-  return dbData || [];
+
+  if (table === 'products') {
+    finalData.forEach(item => {
+      if (item.detailed_description && typeof item.detailed_description === 'string' && item.detailed_description.includes('<!-- COA_DATA:')) {
+        const match = item.detailed_description.match(/<!-- COA_DATA:(.*?) -->/);
+        if (match) {
+          try {
+            if (!item.coa_urls || item.coa_urls.length === 0) item.coa_urls = JSON.parse(match[1]);
+            item.detailed_description = item.detailed_description.replace(match[0], '').trim();
+          } catch(e) {}
+        }
+      }
+    });
+  }
+
+  return finalData;
 }
 
 async function adminPost(table, data) {
@@ -476,7 +492,13 @@ function openProductModal(productId = null) {
       document.getElementById('pm_category').value = p.category_id || '';
       document.getElementById('pm_active').value = p.is_active ? 'true' : 'false';
       document.getElementById('pm_short_desc').value = p.short_description || '';
-      document.getElementById('pm_desc').value = p.detailed_description || '';
+      
+      let cleanDesc = p.detailed_description || '';
+      if (cleanDesc.includes('<!-- COA_DATA:')) {
+        cleanDesc = cleanDesc.replace(/<!-- COA_DATA:.*?-->/g, '').trim();
+      }
+      document.getElementById('pm_desc').value = cleanDesc;
+      
       document.getElementById('pm_featured').checked = !!p.is_featured;
       document.getElementById('pm_bestseller').checked = !!p.is_bestseller;
       document.getElementById('pm_recommended').checked = !!p.is_recommended;
@@ -524,6 +546,10 @@ async function saveProduct() {
 
   if (!name || !slug) { alert('Product name and slug are required.'); return; }
 
+  const saveBtn = document.querySelector('#productModal .btn-primary');
+  const originalBtnText = saveBtn ? saveBtn.textContent : 'Save Product';
+  if (saveBtn) { saveBtn.textContent = '⏳ Saving...'; saveBtn.disabled = true; }
+
   // Handle new COA file uploads
   const coaInput = document.getElementById('pm_coa');
   if (coaInput && coaInput.files && coaInput.files.length > 0) {
@@ -543,12 +569,21 @@ async function saveProduct() {
     }
   }
 
+  let detailed_description = document.getElementById('pm_desc').value;
+  // Clean up any existing embedded data first
+  if (detailed_description.includes('<!-- COA_DATA:')) {
+    detailed_description = detailed_description.replace(/<!-- COA_DATA:.*?-->/g, '').trim();
+  }
+  if (currentProductCoas.length > 0) {
+    detailed_description += `\n<!-- COA_DATA:${JSON.stringify(currentProductCoas)} -->`;
+  }
+
   const data = {
     name, slug,
     category_id: document.getElementById('pm_category').value || null,
     is_active: document.getElementById('pm_active').value === 'true',
     short_description: document.getElementById('pm_short_desc').value,
-    detailed_description: document.getElementById('pm_desc').value,
+    detailed_description,
     is_featured: document.getElementById('pm_featured').checked,
     is_bestseller: document.getElementById('pm_bestseller').checked,
     is_recommended: document.getElementById('pm_recommended').checked,
@@ -611,6 +646,8 @@ async function saveProduct() {
     await loadAllData();
   } catch(e) {
     alert('Error saving product: ' + e.message);
+  } finally {
+    if (saveBtn) { saveBtn.textContent = originalBtnText; saveBtn.disabled = false; }
   }
 }
 window.saveProduct = saveProduct;
@@ -699,6 +736,10 @@ async function saveCategory() {
   const slug = document.getElementById('cm_slug').value.trim() || name.toLowerCase().replace(/\s+/g,'-');
   if (!name) { alert('Category name required'); return; }
 
+  const saveBtn = document.querySelector('#categoryModal .btn-primary');
+  const originalBtnText = saveBtn ? saveBtn.textContent : 'Save Category';
+  if (saveBtn) { saveBtn.textContent = '⏳ Saving...'; saveBtn.disabled = true; }
+
   const data = { 
     name, 
     slug, 
@@ -743,7 +784,11 @@ async function saveCategory() {
     closeModal('categoryModalOverlay');
     showToast('Category saved successfully!');
     await loadAllData();
-  } catch(e) { alert('Error saving category: ' + e.message); }
+  } catch(e) { 
+    alert('Error saving category: ' + e.message); 
+  } finally {
+    if (saveBtn) { saveBtn.textContent = originalBtnText; saveBtn.disabled = false; }
+  }
 }
 window.saveCategory = saveCategory;
 
