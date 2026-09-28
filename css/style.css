@@ -1222,6 +1222,7 @@ ul {
     transform: translateX(0) !important;
     opacity: 1 !important;
     visibility: visible !important;
+    pointer-events: all !important;
 }
 
 /* Mobile menu btn active state */
