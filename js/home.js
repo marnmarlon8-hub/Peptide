@@ -42,8 +42,10 @@ async function loadFeaturedProducts() {
       const avgRating = productReviews.length
         ? (productReviews.reduce((s, r) => s + r.rating, 0) / productReviews.length).toFixed(1)
         : '5.0';
-      const imgSrc = localStorage.getItem(`admin_prod_img_${p.id}`)
-        || ((p.image_urls && p.image_urls[0]) ? p.image_urls[0] : 'assets/images/bpc157.png');
+      // Image priority: Supabase URL first (works on ALL devices), then localStorage cache as fallback
+      const imgSrc = ((p.image_urls && p.image_urls[0]) ? p.image_urls[0] : null)
+        || localStorage.getItem(`admin_prod_img_${p.id}`)
+        || 'assets/images/bpc157.png';
       const badge = p.is_bestseller ? '<span class="product-badge">Best Seller</span>' : (p.is_featured ? '<span class="product-badge product-badge--featured">Featured</span>' : '');
       const varOptions = vars.map((v, i) => `<option value="${v.id}" data-price="${v.price_usd}" data-label="${v.label}"${i === 0 ? ' selected' : ''}>${v.label} — ${formatPrice(v.price_usd)}</option>`).join('');
       const firstPrice = vars[0] ? formatPrice(vars[0].price_usd) : '';

@@ -47,7 +47,8 @@ async function loadShopProducts() {
     allProducts = products.map(p => ({
       ...p,
       category_slug: catMap[p.category_id] || '',
-      img: localStorage.getItem(`admin_prod_img_${p.id}`) || (p.image_urls && p.image_urls[0]) || 'assets/images/bpc157.png',
+      // Image priority: Supabase URL first (works on ALL devices), then localStorage as fallback
+      img: (p.image_urls && p.image_urls[0]) || localStorage.getItem(`admin_prod_img_${p.id}`) || 'assets/images/bpc157.png',
       vars: variations.filter(v => v.product_id === p.id).map(v => ({ id: v.id, label: v.label, price: parseFloat(v.price_usd) }))
     }));
 

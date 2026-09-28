@@ -45,6 +45,8 @@ const db = {
       (dbData || []).forEach(item => map.set(item.id, item));
       localItems.forEach(item => map.set(item.id, item));
       let merged = Array.from(map.values());
+      // Strip internal tracking flag before returning
+      merged = merged.map(item => { const copy = { ...item }; delete copy._local_only; return copy; });
       // Apply basic filtering if params.filter is provided
       if (params.filter) {
         merged = merged.filter(item => {

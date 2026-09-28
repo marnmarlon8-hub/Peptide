@@ -45,10 +45,148 @@ function setCustomLocal(table, items) {
   try {
     localStorage.setItem('ls_custom_' + table, JSON.stringify(items));
   } catch (e) {
-    console.warn('LocalStorage limit reached. Could not save to local fallback:', e);
-    alert('Warning: Your browser storage is full. Large files (like big COA PDFs) could not be saved locally because the Supabase database blocked the upload. Please use the "Supabase RLS Fix" button to enable direct database saving.');
+    console.warn('LocalStorage limit reached:', e);
+    // Storage full — show RLS fix modal which explains what to do
+    showRlsFixModal();
   }
 }
+
+// =============================================
+// SYNC STATUS — Shows whether data is saving to Supabase (cloud) or only locally
+// =============================================
+let _supabaseSaveWorking = null; // null = unknown, true = working, false = blocked
+
+function setSyncStatus(working, message) {
+  _supabaseSaveWorking = working;
+  const indicator = document.getElementById('syncStatusIndicator');
+  if (!indicator) return;
+  if (working === true) {
+    indicator.innerHTML = `<span style="color:#2ecc71;font-weight:600;">✅ Cloud Sync Active — changes visible on all devices</span>`;
+    indicator.style.background = 'rgba(46,204,113,0.1)';
+    indicator.style.borderColor = '#2ecc71';
+  } else if (working === false) {
+    indicator.innerHTML = `<span style="color:#e74c3c;font-weight:600;">⚠️ LOCAL ONLY — Changes only visible on THIS device! <button onclick="showRlsFixModal()" style="background:#e74c3c;color:white;border:none;padding:3px 10px;border-radius:5px;cursor:pointer;font-size:0.8rem;margin-left:8px;">Fix Now →</button></span>`;
+    indicator.style.background = 'rgba(231,76,60,0.1)';
+    indicator.style.borderColor = '#e74c3c';
+  } else {
+    indicator.innerHTML = `<span style="color:#aaa;">🔄 Checking cloud sync status...</span>`;
+  }
+}
+
+async function checkSupabaseSyncStatus() {
+  // Try a lightweight authenticated read to see if Supabase is accessible
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/products?select=id&limit=1`, {
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json' }
+    });
+    if (res.ok) {
+      // Check if we have any local-only items that haven't been synced
+      const localProducts = getCustomLocal('products');
+      const localCats = getCustomLocal('categories');
+      if (localProducts.length > 0 || localCats.length > 0) {
+        // We have local items — check if they exist in DB
+        setSyncStatus(false, 'Local items detected');
+        showSyncBanner(localProducts.length + localCats.length);
+      } else {
+        setSyncStatus(true, 'All synced');
+      }
+    } else if (res.status === 401 || res.status === 403) {
+      setSyncStatus(false, 'Auth blocked');
+    } else {
+      setSyncStatus(false, 'RLS blocked');
+    }
+  } catch(e) {
+    setSyncStatus(false, 'Network error');
+  }
+}
+
+function showSyncBanner(count) {
+  const existing = document.getElementById('syncBanner');
+  if (existing) return;
+  const banner = document.createElement('div');
+  banner.id = 'syncBanner';
+  banner.style.cssText = `
+    position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white; padding: 12px 20px; text-align: center;
+    font-family: 'Inter', sans-serif; font-size: 0.88rem; font-weight: 500;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    box-shadow: 0 4px 20px rgba(231,76,60,0.4);
+  `;
+  banner.innerHTML = `
+    ⚠️ <strong>${count} item(s) saved LOCALLY ONLY</strong> — not visible on other devices.
+    <button onclick="pushLocalToSupabase()" style="background:white;color:#e74c3c;border:none;padding:5px 14px;border-radius:6px;cursor:pointer;font-weight:700;font-size:0.83rem;">🔄 Sync to Cloud Now</button>
+    <button onclick="showRlsFixModal()" style="background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.5);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:0.83rem;">Fix Database →</button>
+    <button onclick="document.getElementById('syncBanner').remove()" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:1.1rem;padding:0 4px;">✕</button>
+  `;
+  document.body.prepend(banner);
+}
+
+async function pushLocalToSupabase() {
+  const tables = ['categories', 'products', 'product_variations'];
+  let totalPushed = 0;
+  let totalFailed = 0;
+  const btn = document.querySelector('#syncBanner button');
+  if (btn) { btn.textContent = '⏳ Syncing...'; btn.disabled = true; }
+
+  for (const table of tables) {
+    const localItems = getCustomLocal(table);
+    if (!localItems.length) continue;
+
+    const successIds = [];
+    for (const item of localItems) {
+      try {
+        // Try to upsert (insert or update) each local item to Supabase
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${adminToken}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'resolution=merge-duplicates,return=representation'
+          },
+          body: JSON.stringify(item)
+        });
+        if (res.ok) {
+          successIds.push(item.id);
+          totalPushed++;
+        } else {
+          totalFailed++;
+          const err = await res.text();
+          console.warn(`Failed to push ${table} item ${item.id}:`, err);
+        }
+      } catch(e) {
+        totalFailed++;
+        console.warn(`Exception pushing ${table}:`, e);
+      }
+    }
+
+    // Remove successfully synced items from local storage
+    if (successIds.length > 0) {
+      const remaining = localItems.filter(x => !successIds.includes(x.id));
+      if (remaining.length === 0) {
+        localStorage.removeItem('ls_custom_' + table);
+      } else {
+        localStorage.setItem('ls_custom_' + table, JSON.stringify(remaining));
+      }
+    }
+  }
+
+  if (totalFailed > 0 && totalPushed === 0) {
+    // Nothing got through — RLS is still blocking
+    showToast(`Sync failed. Database permissions still blocked. Please run the RLS fix SQL first.`, 'error');
+    showRlsFixModal();
+  } else if (totalPushed > 0 && totalFailed === 0) {
+    showToast(`✅ ${totalPushed} item(s) successfully synced to cloud! Now visible on all devices.`);
+    document.getElementById('syncBanner')?.remove();
+    setSyncStatus(true);
+    await loadAllData();
+  } else if (totalPushed > 0) {
+    showToast(`Partially synced: ${totalPushed} succeeded, ${totalFailed} failed. Check RLS settings.`, 'info');
+    await loadAllData();
+  }
+}
+window.pushLocalToSupabase = pushLocalToSupabase;
 
 async function adminFetch(table, params = {}) {
   let dbData = [];
@@ -101,15 +239,18 @@ async function adminPost(table, data) {
     });
     const txt = await res.text();
     if (!res.ok) {
-      if (res.status === 401 || res.status === 403 || txt.includes('security policy')) {
+      if (res.status === 401 || res.status === 403 || txt.includes('security policy') || txt.includes('42501')) {
+        setSyncStatus(false, 'RLS blocked on insert');
         showRlsFixModal();
       }
-      console.warn(`adminPost error on ${table}: ${txt}. Saving locally.`);
+      console.warn(`adminPost error on ${table}: ${txt}. Saving locally as fallback.`);
       const newId = data.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'loc_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8));
-      const newObj = { id: newId, ...data, created_at: new Date().toISOString() };
+      const newObj = { id: newId, ...data, created_at: new Date().toISOString(), _local_only: true };
       const local = getCustomLocal(table);
       local.push(newObj);
       setCustomLocal(table, local);
+      // Show sync banner after a short delay to allow the current save flow to complete
+      setTimeout(() => checkSupabaseSyncStatus(), 500);
       return [newObj];
     }
     const json = JSON.parse(txt);
@@ -127,14 +268,17 @@ async function adminPost(table, data) {
       setCustomLocal(table, local);
       return [newObj];
     }
+    // Successful Supabase save — mark sync as working
+    setSyncStatus(true);
     return json;
   } catch(e) {
     console.warn(`adminPost exception on ${table}:`, e);
     const newId = data.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'loc_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8));
-    const newObj = { id: newId, ...data, created_at: new Date().toISOString() };
+    const newObj = { id: newId, ...data, created_at: new Date().toISOString(), _local_only: true };
     const local = getCustomLocal(table);
     local.push(newObj);
     setCustomLocal(table, local);
+    setTimeout(() => checkSupabaseSyncStatus(), 500);
     return [newObj];
   }
 }
@@ -167,12 +311,14 @@ async function adminPatch(table, data, filter) {
     });
     if (!res.ok) {
       const errorTxt = await res.text();
-      if (res.status === 401 || res.status === 403 || errorTxt.includes('security policy')) {
+      if (res.status === 401 || res.status === 403 || errorTxt.includes('security policy') || errorTxt.includes('42501')) {
+        setSyncStatus(false, 'RLS blocked on update');
         showRlsFixModal();
       }
     } else {
       dbSuccess = true;
       returnedJson = await res.json();
+      setSyncStatus(true);
       
       // Check if Supabase silently dropped columns (like coa_urls)
       if (returnedJson && returnedJson[0]) {
@@ -196,14 +342,15 @@ async function adminPatch(table, data, filter) {
       else if (table === 'categories') original = allCategories.find(x => x.id === targetId) || {};
       else if (table === 'product_variations') original = allVariations.find(x => x.id === targetId) || {};
       
-      const newObj = { ...original, ...data, id: targetId, updated_at: new Date().toISOString() };
+      const newObj = { ...original, ...data, id: targetId, updated_at: new Date().toISOString(), _local_only: true };
       local.push(newObj);
       setCustomLocal(table, local);
     } else if (droppedColumns) {
-      // Already in local, but we need to ensure the dropped columns are merged since it bypassed the pre-patch merge if it was just added
       local[idx] = { ...local[idx], ...data, updated_at: new Date().toISOString() };
       setCustomLocal(table, local);
     }
+    // Show sync warning after save
+    setTimeout(() => checkSupabaseSyncStatus(), 500);
   }
 
   if (dbSuccess && !droppedColumns) return returnedJson;
@@ -375,11 +522,15 @@ function renderProducts() {
   tbody.innerHTML = filtered.map(p => {
     const cat = allCategories.find(c => c.id === p.category_id);
     const vars = allVariations.filter(v => v.product_id === p.id);
-    const img = localStorage.getItem(`admin_prod_img_${p.id}`) || (p.image_urls && p.image_urls[0]) || '../assets/images/bpc157.png';
+    // Image priority: Supabase URL first (works on all devices), then localStorage cache
+    const img = (p.image_urls && p.image_urls[0]) || localStorage.getItem(`admin_prod_img_${p.id}`) || '../assets/images/bpc157.png';
+    // Check if this product is only stored locally (not visible on other devices)
+    const localItems = getCustomLocal('products');
+    const isLocalOnly = localItems.some(li => li.id === p.id);
     return `
-      <tr>
+      <tr${isLocalOnly ? ' style="background:rgba(231,76,60,0.04);border-left:3px solid #e74c3c;"' : ''}>
         <td><img src="${img}" class="prod-thumb" alt="${p.name}" onerror="this.src='../assets/images/bpc157.png'"></td>
-        <td><strong>${p.name}</strong><br><span style="font-size:.75rem;color:#aaa;">${p.slug}</span></td>
+        <td><strong>${p.name}</strong><br><span style="font-size:.75rem;color:#aaa;">${p.slug}</span>${isLocalOnly ? '<br><span style="font-size:.68rem;background:#e74c3c;color:white;padding:1px 6px;border-radius:4px;font-weight:700;margin-top:2px;display:inline-block;">LOCAL ONLY — not visible on other devices</span>' : ''}</td>
         <td>${cat ? cat.name : '—'}</td>
         <td>${vars.map(v => `<span style="font-size:.75rem;background:#f0f0f0;padding:.15rem .4rem;border-radius:4px;margin:.1rem;">${v.label} — $${v.price_usd}</span>`).join('')}</td>
         <td>${p.is_featured ? '⭐' : ''} ${p.is_bestseller ? '🔥' : ''}</td>
