@@ -24,9 +24,43 @@ const db = {
     if (params.offset) qp.set('offset', params.offset);
     const qs = qp.toString();
     if (qs) url += '?' + qs;
-    const res = await fetch(url, { headers: this.headers });
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
+
+    let dbData = [];
+    try {
+      const res = await fetch(url, { headers: this.headers });
+      if (res.ok) dbData = await res.json();
+    } catch(e) {
+      console.warn('Supabase fetch warning:', e);
+    }
+
+    // Merge with custom items from localStorage
+    const localItems = LS.get('custom_' + table) || [];
+    if (localItems.length > 0) {
+      const map = new Map();
+      (dbData || []).forEach(item => map.set(item.id, item));
+      localItems.forEach(item => map.set(item.id, item));
+      let merged = Array.from(map.values());
+      // Apply basic filtering if params.filter is provided
+      if (params.filter) {
+        merged = merged.filter(item => {
+          for (const [k, v] of Object.entries(params.filter)) {
+            if (typeof v === 'string' && v.startsWith('eq.')) {
+              const val = v.slice(3);
+              if (val === 'true') { if (!item[k]) return false; }
+              else if (val === 'false') { if (item[k]) return false; }
+              else if (String(item[k]) !== val) return false;
+            } else if (typeof v === 'string' && v.startsWith('in.(')) {
+              const vals = v.slice(4, -1).split(',').map(s => s.trim());
+              if (!vals.includes(String(item[k]))) return false;
+            }
+          }
+          return true;
+        });
+      }
+      return merged;
+    }
+
+    return dbData || [];
   },
 
   async insert(table, data) {

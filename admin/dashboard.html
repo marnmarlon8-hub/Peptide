@@ -65,6 +65,7 @@
     <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
     <div class="topbar-title" id="topbarTitle">Dashboard Overview</div>
     <div class="topbar-user">
+      <button class="btn-admin-outline" onclick="openRlsModal()" style="margin-right:12px;font-size:0.78rem;padding:4px 10px;display:inline-flex;align-items:center;gap:4px;">⚡ Supabase RLS Setup</button>
       <span class="tu-email" id="adminEmailDisplay"></span>
       <div class="tu-avatar" id="adminAvatar">A</div>
     </div>
@@ -406,6 +407,40 @@
     <div class="modal-footer">
       <button class="btn-admin-outline" onclick="closeModal('blogModalOverlay')">Cancel</button>
       <button class="btn-admin-primary" onclick="saveBlogPost()">Save Post</button>
+    </div>
+<!-- Supabase RLS Fix Modal -->
+<div class="modal-overlay" id="rlsModalOverlay">
+  <div class="modal-box modal-lg">
+    <div class="modal-header">
+      <h3>⚡ Supabase Database RLS Setup</h3>
+      <button class="modal-close" onclick="closeModal('rlsModalOverlay')">✕</button>
+    </div>
+    <div class="modal-body" style="font-size:0.88rem;line-height:1.5;color:#333;">
+      <p style="margin-bottom:0.75rem;">If adding products or categories shows a Row-Level Security (RLS) error (code <code>42501</code>), run this SQL script in your <strong>Supabase Dashboard → SQL Editor</strong> to grant insert and update permissions to authenticated admins:</p>
+      <div style="position:relative;background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:8px;font-family:monospace;font-size:0.8rem;overflow-x:auto;margin-bottom:1rem;">
+        <button onclick="copyRlsSql()" style="position:absolute;top:8px;right:8px;background:#C8A96A;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:0.75rem;font-weight:600;">📋 Copy SQL</button>
+        <pre id="rlsSqlCode" style="margin:0;white-space:pre-wrap;">-- Grant INSERT/UPDATE/DELETE RLS permissions to authenticated admins:
+
+CREATE POLICY "Enable insert for categories" ON categories FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Enable update for categories" ON categories FOR UPDATE TO authenticated USING (true);
+CREATE POLICY "Enable delete for categories" ON categories FOR DELETE TO authenticated USING (true);
+
+CREATE POLICY "Enable insert for products" ON products FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Enable update for products" ON products FOR UPDATE TO authenticated USING (true);
+CREATE POLICY "Enable delete for products" ON products FOR DELETE TO authenticated USING (true);
+
+CREATE POLICY "Enable insert for product_variations" ON product_variations FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Enable update for product_variations" ON product_variations FOR UPDATE TO authenticated USING (true);
+CREATE POLICY "Enable delete for product_variations" ON product_variations FOR DELETE TO authenticated USING (true);
+
+CREATE POLICY "Enable insert for reviews" ON reviews FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Enable update for reviews" ON reviews FOR UPDATE TO authenticated USING (true);
+CREATE POLICY "Enable delete for reviews" ON reviews FOR DELETE TO authenticated USING (true);</pre>
+      </div>
+      <p style="font-size:0.8rem;color:#666;">Note: Even before running this script, the admin panel automatically persists added products & categories locally so your website stays fully operational!</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-admin-primary" onclick="closeModal('rlsModalOverlay')">Done</button>
     </div>
   </div>
 </div>

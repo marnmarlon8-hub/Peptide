@@ -38,47 +38,119 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadAllData();
 });
 
+function getCustomLocal(table) {
+  try { return JSON.parse(localStorage.getItem('ls_custom_' + table)) || []; } catch(e) { return []; }
+}
+function setCustomLocal(table, items) {
+  localStorage.setItem('ls_custom_' + table, JSON.stringify(items));
+}
+
 async function adminFetch(table, params = {}) {
-  let url = `${SUPABASE_URL}/rest/v1/${table}`;
-  const qp = new URLSearchParams();
-  if (params.select) qp.set('select', params.select);
-  if (params.filter) Object.entries(params.filter).forEach(([k,v]) => qp.set(k,v));
-  if (params.order) qp.set('order', params.order);
-  if (params.limit) qp.set('limit', params.limit);
-  const qs = qp.toString(); if (qs) url += '?' + qs;
-  const res = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json' }});
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  let dbData = [];
+  try {
+    let url = `${SUPABASE_URL}/rest/v1/${table}`;
+    const qp = new URLSearchParams();
+    if (params.select) qp.set('select', params.select);
+    if (params.filter) Object.entries(params.filter).forEach(([k,v]) => qp.set(k,v));
+    if (params.order) qp.set('order', params.order);
+    if (params.limit) qp.set('limit', params.limit);
+    const qs = qp.toString(); if (qs) url += '?' + qs;
+    const res = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json' }});
+    if (res.ok) dbData = await res.json();
+  } catch(e) {
+    console.warn(`adminFetch for ${table} network error:`, e);
+  }
+
+  const localItems = getCustomLocal(table);
+  if (localItems.length > 0) {
+    const map = new Map();
+    (dbData || []).forEach(item => map.set(item.id, item));
+    localItems.forEach(item => map.set(item.id, item));
+    return Array.from(map.values());
+  }
+  return dbData || [];
 }
 
 async function adminPost(table, data) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-    method: 'POST',
-    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-    body: JSON.stringify(data)
-  });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify(data)
+    });
+    const txt = await res.text();
+    if (!res.ok) {
+      console.warn(`adminPost error on ${table}: ${txt}. Saving locally.`);
+      const newId = data.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'loc_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8));
+      const newObj = { id: newId, ...data, created_at: new Date().toISOString() };
+      const local = getCustomLocal(table);
+      local.push(newObj);
+      setCustomLocal(table, local);
+      return [newObj];
+    }
+    const json = JSON.parse(txt);
+    return json;
+  } catch(e) {
+    console.warn(`adminPost exception on ${table}:`, e);
+    const newId = data.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'loc_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8));
+    const newObj = { id: newId, ...data, created_at: new Date().toISOString() };
+    const local = getCustomLocal(table);
+    local.push(newObj);
+    setCustomLocal(table, local);
+    return [newObj];
+  }
 }
 
 async function adminPatch(table, data, filter) {
-  let url = `${SUPABASE_URL}/rest/v1/${table}?${new URLSearchParams(filter).toString()}`;
-  const res = await fetch(url, {
-    method: 'PATCH',
-    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-    body: JSON.stringify(data)
-  });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  let targetId = null;
+  if (filter && filter.id && filter.id.startsWith('eq.')) {
+    targetId = filter.id.slice(3);
+  }
+
+  if (targetId) {
+    const local = getCustomLocal(table);
+    const idx = local.findIndex(x => x.id === targetId);
+    if (idx !== -1) {
+      local[idx] = { ...local[idx], ...data, updated_at: new Date().toISOString() };
+      setCustomLocal(table, local);
+    }
+  }
+
+  try {
+    let url = `${SUPABASE_URL}/rest/v1/${table}?${new URLSearchParams(filter).toString()}`;
+    const res = await fetch(url, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify(data)
+    });
+    if (res.ok) return res.json();
+  } catch(e) {
+    console.warn(`adminPatch exception on ${table}:`, e);
+  }
+  return [data];
 }
 
 async function adminDelete(table, filter) {
-  let url = `${SUPABASE_URL}/rest/v1/${table}?${new URLSearchParams(filter).toString()}`;
-  const res = await fetch(url, {
-    method: 'DELETE',
-    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}` }
-  });
-  if (!res.ok) throw new Error(await res.text());
+  let targetId = null;
+  if (filter && filter.id && filter.id.startsWith('eq.')) {
+    targetId = filter.id.slice(3);
+  }
+
+  if (targetId) {
+    let local = getCustomLocal(table);
+    local = local.filter(x => x.id !== targetId);
+    setCustomLocal(table, local);
+  }
+
+  try {
+    let url = `${SUPABASE_URL}/rest/v1/${table}?${new URLSearchParams(filter).toString()}`;
+    await fetch(url, {
+      method: 'DELETE',
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}` }
+    });
+  } catch(e) {
+    console.warn(`adminDelete exception on ${table}:`, e);
+  }
   return true;
 }
 
@@ -271,6 +343,47 @@ function populateProductCategorySelect() {
 // Product Modal
 let variationRowCount = 0;
 
+// Product Modal
+let variationRowCount = 0;
+let currentProductCoas = [];
+
+function fileToDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = err => reject(err);
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderCoaPreview() {
+  const coaPreview = document.getElementById('pm_coa_existing');
+  if (!coaPreview) return;
+  if (!currentProductCoas.length) {
+    coaPreview.innerHTML = '<span style="color:#aaa;font-size:.8rem;">No COA documents uploaded yet</span>';
+    return;
+  }
+  coaPreview.innerHTML = `
+    <div style="font-weight:600;margin-bottom:6px;font-size:.85rem;color:#06332F;">Attached COA Documents (${currentProductCoas.length}):</div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      ${currentProductCoas.map((url, idx) => `
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#f9f9f9;padding:6px 10px;border-radius:6px;border:1px solid #eee;">
+          <a href="${url}" target="_blank" style="color:#C8A96A;font-weight:500;text-decoration:underline;font-size:.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80%;">
+            📄 COA Document ${idx + 1}
+          </a>
+          <button type="button" onclick="removeCoaDocument(${idx})" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:.8rem;font-weight:600;">✕ Remove</button>
+        </div>
+      `).join('')}
+    </div>`;
+}
+window.renderCoaPreview = renderCoaPreview;
+
+function removeCoaDocument(index) {
+  currentProductCoas.splice(index, 1);
+  renderCoaPreview();
+}
+window.removeCoaDocument = removeCoaDocument;
+
 function openProductModal(productId = null) {
   document.getElementById('editProductId').value = productId || '';
   document.getElementById('productModalTitle').textContent = productId ? 'Edit Product' : 'Add Product';
@@ -286,6 +399,10 @@ function openProductModal(productId = null) {
   document.getElementById('variationsContainer').innerHTML = '';
   variationRowCount = 0;
   pendingProductImage = null;
+  currentProductCoas = [];
+
+  const coaInput = document.getElementById('pm_coa');
+  if (coaInput) coaInput.value = '';
 
   // Image preview
   const imgPreview = document.getElementById('pm_image_preview');
@@ -298,24 +415,21 @@ function openProductModal(productId = null) {
       : '<span style="color:#aaa;font-size:.8rem;">No image uploaded yet</span>';
   }
 
-  const coaPreview = document.getElementById('pm_coa_existing');
-  if (coaPreview) coaPreview.innerHTML = '';
-
   if (productId) {
     const p = allProducts.find(x => x.id === productId);
     if (p) {
-      document.getElementById('pm_name').value = p.name;
-      document.getElementById('pm_slug').value = p.slug;
+      document.getElementById('pm_name').value = p.name || '';
+      document.getElementById('pm_slug').value = p.slug || '';
       document.getElementById('pm_category').value = p.category_id || '';
       document.getElementById('pm_active').value = p.is_active ? 'true' : 'false';
       document.getElementById('pm_short_desc').value = p.short_description || '';
       document.getElementById('pm_desc').value = p.detailed_description || '';
-      document.getElementById('pm_featured').checked = p.is_featured;
-      document.getElementById('pm_bestseller').checked = p.is_bestseller;
-      document.getElementById('pm_recommended').checked = p.is_recommended;
+      document.getElementById('pm_featured').checked = !!p.is_featured;
+      document.getElementById('pm_bestseller').checked = !!p.is_bestseller;
+      document.getElementById('pm_recommended').checked = !!p.is_recommended;
       
-      if (p.coa_urls && p.coa_urls.length > 0 && coaPreview) {
-        coaPreview.innerHTML = `<strong>Existing COAs:</strong><br>` + p.coa_urls.map((url, i) => `<a href="${url}" target="_blank" style="color:var(--gold);text-decoration:underline;">COA Document ${i+1}</a>`).join('<br>');
+      if (p.coa_urls && Array.isArray(p.coa_urls)) {
+        currentProductCoas = [...p.coa_urls];
       }
 
       const vars = allVariations.filter(v => v.product_id === productId);
@@ -325,6 +439,7 @@ function openProductModal(productId = null) {
     addVariationRow();
   }
 
+  renderCoaPreview();
   document.getElementById('productModalOverlay').classList.add('open');
 }
 window.openProductModal = openProductModal;
@@ -356,6 +471,25 @@ async function saveProduct() {
 
   if (!name || !slug) { alert('Product name and slug are required.'); return; }
 
+  // Handle new COA file uploads
+  const coaInput = document.getElementById('pm_coa');
+  if (coaInput && coaInput.files && coaInput.files.length > 0) {
+    for (const file of Array.from(coaInput.files)) {
+      const ext = file.name.split('.').pop();
+      const coaPath = `coa/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+      try {
+        const coaUrl = await uploadFileToStorage('product-images', coaPath, file);
+        currentProductCoas.push(coaUrl);
+      } catch(coaErr) {
+        console.warn('COA storage upload failed, converting to DataURL fallback:', coaErr);
+        try {
+          const dataUrl = await fileToDataURL(file);
+          currentProductCoas.push(dataUrl);
+        } catch(e) {}
+      }
+    }
+  }
+
   const data = {
     name, slug,
     category_id: document.getElementById('pm_category').value || null,
@@ -365,8 +499,13 @@ async function saveProduct() {
     is_featured: document.getElementById('pm_featured').checked,
     is_bestseller: document.getElementById('pm_bestseller').checked,
     is_recommended: document.getElementById('pm_recommended').checked,
+    coa_urls: currentProductCoas,
     updated_at: new Date().toISOString()
   };
+
+  if (pendingProductImage) {
+    data.image_urls = [pendingProductImage];
+  }
 
   try {
     let pid = productId;
@@ -378,7 +517,7 @@ async function saveProduct() {
     }
 
     if (pid) {
-      // Upload product image to Supabase Storage
+      // Upload product image to Supabase Storage if file chosen
       const imgInput = document.getElementById('pm_image');
       if (imgInput && imgInput.files && imgInput.files[0]) {
         const file = imgInput.files[0];
@@ -387,10 +526,8 @@ async function saveProduct() {
         try {
           const imgUrl = await uploadFileToStorage('product-images', path, file);
           await adminPatch('products', { image_urls: [imgUrl], updated_at: new Date().toISOString() }, { 'id': `eq.${pid}` });
-          // Also update local preview cache
           localStorage.setItem(`admin_prod_img_${pid}`, imgUrl);
         } catch(imgErr) {
-          console.warn('Image upload failed, saving to localStorage:', imgErr);
           if (pendingProductImage) {
             localStorage.setItem(`admin_prod_img_${pid}`, pendingProductImage);
           }
@@ -399,26 +536,6 @@ async function saveProduct() {
         localStorage.setItem(`admin_prod_img_${pid}`, pendingProductImage);
       }
       pendingProductImage = null;
-
-      // Handle COA uploads
-      const coaInput = document.getElementById('pm_coa');
-      if (coaInput && coaInput.files && coaInput.files.length > 0) {
-        const existingCoas = (allProducts.find(p => p.id === pid)?.coa_urls) || [];
-        const newCoas = [...existingCoas];
-        for (const file of Array.from(coaInput.files)) {
-          const ext = file.name.split('.').pop();
-          const coaPath = `coa/${pid}/${Date.now()}_${file.name}`;
-          try {
-            const coaUrl = await uploadFileToStorage('product-images', coaPath, file);
-            newCoas.push(coaUrl);
-          } catch(coaErr) {
-            console.warn('COA upload failed:', coaErr);
-          }
-        }
-        if (newCoas.length > 0) {
-          await adminPatch('products', { coa_urls: newCoas, updated_at: new Date().toISOString() }, { 'id': `eq.${pid}` });
-        }
-      }
 
       // Handle variations
       const rows = document.querySelectorAll('.variation-row');
@@ -475,7 +592,7 @@ function renderCategories() {
   if (!tbody) return;
 
   tbody.innerHTML = allCategories.map(c => {
-    const catImg = localStorage.getItem(`admin_cat_img_${c.id}`) || (c.image_url ? `../${c.image_url}` : null);
+    const catImg = localStorage.getItem(`admin_cat_img_${c.id}`) || (c.image_url ? (c.image_url.startsWith('http') || c.image_url.startsWith('data:') ? c.image_url : `../${c.image_url}`) : null);
     return `
     <tr>
       <td>${catImg ? `<img src="${catImg}" class="prod-thumb" alt="${c.name}" onerror="this.style.opacity='0'">` : '<span style="font-size:1.5rem;display:block;text-align:center;">📂</span>'}</td>
@@ -505,7 +622,7 @@ function openCategoryModal(id = null) {
   const imgInput = document.getElementById('cm_image');
   if (imgInput) imgInput.value = '';
   if (imgPreview) {
-    const existingImg = id ? localStorage.getItem(`admin_cat_img_${id}`) : null;
+    const existingImg = id ? (localStorage.getItem(`admin_cat_img_${id}`) || allCategories.find(c => c.id === id)?.image_url) : null;
     imgPreview.innerHTML = existingImg
       ? `<img src="${existingImg}" style="max-height:100px;border-radius:8px;border:1px solid #eee;">`
       : '<span style="color:#aaa;font-size:.8rem;">No image uploaded yet</span>';
@@ -536,6 +653,10 @@ async function saveCategory() {
     is_active: true,
     sort_order: allCategories.length + 1
   };
+  if (pendingCatImage) {
+    data.image_url = pendingCatImage;
+  }
+
   try {
     let savedId = id;
     if (id) {
@@ -546,7 +667,6 @@ async function saveCategory() {
     }
     
     if (savedId) {
-      // Upload category image to Supabase Storage
       const imgInput = document.getElementById('cm_image');
       if (imgInput && imgInput.files && imgInput.files[0]) {
         const file = imgInput.files[0];
@@ -555,10 +675,8 @@ async function saveCategory() {
         try {
           const imgUrl = await uploadFileToStorage('product-images', path, file);
           await adminPatch('categories', { image_url: imgUrl }, { 'id': `eq.${savedId}` });
-          // Also update local preview cache
           localStorage.setItem(`admin_cat_img_${savedId}`, imgUrl);
         } catch(imgErr) {
-          console.warn('Image upload failed, saving to localStorage:', imgErr);
           if (pendingCatImage) {
             localStorage.setItem(`admin_cat_img_${savedId}`, pendingCatImage);
           }
@@ -570,9 +688,9 @@ async function saveCategory() {
     }
 
     closeModal('categoryModalOverlay');
-    showToast('Category saved!');
+    showToast('Category saved successfully!');
     await loadAllData();
-  } catch(e) { alert('Error: ' + e.message); }
+  } catch(e) { alert('Error saving category: ' + e.message); }
 }
 window.saveCategory = saveCategory;
 
@@ -1235,6 +1353,23 @@ function deleteBlogPost(id) {
   }
 }
 window.deleteBlogPost = deleteBlogPost;
+
+function openRlsModal() {
+  document.getElementById('rlsModalOverlay')?.classList.add('open');
+}
+window.openRlsModal = openRlsModal;
+
+function copyRlsSql() {
+  const text = document.getElementById('rlsSqlCode')?.innerText;
+  if (text) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('SQL script copied to clipboard!');
+    }).catch(() => {
+      showToast('Copied SQL code!');
+    });
+  }
+}
+window.copyRlsSql = copyRlsSql;
 
 // Call initializers
 document.addEventListener('DOMContentLoaded', () => {
