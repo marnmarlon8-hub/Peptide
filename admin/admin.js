@@ -74,26 +74,40 @@ function setSyncStatus(working, message) {
 }
 
 async function checkSupabaseSyncStatus() {
-  // Try a lightweight authenticated read to see if Supabase is accessible
+  // Test actual write access by trying a small INSERT then immediately DELETE
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/products?select=id&limit=1`, {
-      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json' }
+    const testSlug = '_sync_test_' + Date.now();
+    const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${adminToken || SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({ name: '_sync_test', slug: testSlug, is_active: false })
     });
-    if (res.ok) {
-      // Check if we have any local-only items that haven't been synced
+
+    if (insertRes.ok) {
+      // Write works! Clean up the test row
+      const inserted = await insertRes.json();
+      if (inserted[0]?.id) {
+        await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${inserted[0].id}`, {
+          method: 'DELETE',
+          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken || SUPABASE_ANON_KEY}` }
+        });
+      }
+      // Clear any local-only items banner — sync is working!
       const localProducts = getCustomLocal('products');
       const localCats = getCustomLocal('categories');
       if (localProducts.length > 0 || localCats.length > 0) {
-        // We have local items — check if they exist in DB
-        setSyncStatus(false, 'Local items detected');
         showSyncBanner(localProducts.length + localCats.length);
+        setSyncStatus(true, 'Working but has local cache');
       } else {
-        setSyncStatus(true, 'All synced');
+        setSyncStatus(true, 'All good');
       }
-    } else if (res.status === 401 || res.status === 403) {
-      setSyncStatus(false, 'Auth blocked');
     } else {
-      setSyncStatus(false, 'RLS blocked');
+      setSyncStatus(false, 'Write blocked');
     }
   } catch(e) {
     setSyncStatus(false, 'Network error');
