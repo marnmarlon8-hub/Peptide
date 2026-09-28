@@ -737,7 +737,7 @@ const PAGE_DEFAULTS = {
 <p>We implement SSL encryption and industry-standard security practices to protect your data.</p>
 
 <h3>5. Contact Us</h3>
-<p>Email: <a href="mailto:privacy@labsourced.com">privacy@labsourced.com</a></p>`
+<p>Email: <a href="mailto:privacy@labsourced.co">privacy@labsourced.co</a></p>`
   },
   'terms-conditions': {
     title: 'Terms & Conditions',
@@ -757,7 +757,7 @@ const PAGE_DEFAULTS = {
 <p>Labsourced shall not be liable for any indirect, incidental, or consequential damages resulting from your use of our products.</p>
 
 <h3>5. Contact</h3>
-<p>For questions: legal@labsourced.com</p>`
+<p>For questions: legal@labsourced.co</p>`
   },
   'shipping-policy': {
     title: 'Shipping Policy',
@@ -807,7 +807,7 @@ const PAGE_DEFAULTS = {
 </ul>
 
 <h3>Contact</h3>
-<p>For refund inquiries: <a href="mailto:support@labsourced.com">support@labsourced.com</a></p>`
+<p>For refund inquiries: <a href="mailto:support@labsourced.co">support@labsourced.co</a></p>`
   }
 };
 

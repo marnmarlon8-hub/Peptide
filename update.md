@@ -34,7 +34,7 @@ Create a secure admin dashboard.
 Admin login required.
 Create admin credentials:
 Email:
-admin@labsourced.com
+admin@labsourced.co
 Password:
 Generate a secure temporary password and display it clearly after setup.
 ADMIN DASHBOARD FEATURES
