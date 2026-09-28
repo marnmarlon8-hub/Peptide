@@ -33,6 +33,12 @@
     <a href="#" class="sn-item" data-section="reviews" onclick="showSection('reviews',this)">
       <span class="sn-icon">⭐</span><span>Reviews</span>
     </a>
+    <a href="#" class="sn-item" data-section="faq" onclick="showSection('faq',this)">
+      <span class="sn-icon">❓</span><span>FAQ</span>
+    </a>
+    <a href="#" class="sn-item" data-section="blog" onclick="showSection('blog',this)">
+      <span class="sn-icon">📝</span><span>Blog</span>
+    </a>
     <a href="#" class="sn-item" data-section="pages" onclick="showSection('pages',this)">
       <span class="sn-icon">📄</span><span>Pages (CMS)</span>
     </a>
@@ -319,6 +325,75 @@
     <div class="modal-footer">
       <button class="btn-admin-outline" onclick="closeModal('pageModalOverlay')">Cancel</button>
       <button class="btn-admin-primary" onclick="savePage()">Save Page</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== FAQ SECTION ===================== -->
+<section class="admin-section" id="section-faq">
+  <div class="section-header">
+    <h2>FAQ Management</h2>
+    <button class="btn-admin-primary" onclick="openFaqModal(null)">+ Add FAQ</button>
+  </div>
+  <div class="admin-table-wrap">
+    <table class="admin-table" id="faqAdminTable">
+      <thead><tr><th>#</th><th>Question</th><th>Actions</th></tr></thead>
+      <tbody id="faqAdminBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ===================== BLOG SECTION ===================== -->
+<section class="admin-section" id="section-blog">
+  <div class="section-header">
+    <h2>Blog Management</h2>
+    <button class="btn-admin-primary" onclick="openBlogModal(null)">+ Add Post</button>
+  </div>
+  <div class="blog-admin-grid" id="blogAdminGrid"></div>
+</section>
+
+<!-- FAQ Modal -->
+<div class="modal-overlay" id="faqModalOverlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="faqModalTitle">Add FAQ</h3>
+      <button class="modal-close" onclick="closeModal('faqModalOverlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="faqEditIndex" value="">
+      <div class="form-group"><label>Question *</label><input type="text" id="faqQ" placeholder="Enter the question"></div>
+      <div class="form-group"><label>Answer *</label><textarea id="faqA" rows="5" placeholder="Enter the full answer"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-admin-outline" onclick="closeModal('faqModalOverlay')">Cancel</button>
+      <button class="btn-admin-primary" onclick="saveFaq()">Save FAQ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Blog Modal -->
+<div class="modal-overlay" id="blogModalOverlay">
+  <div class="modal-box modal-xl">
+    <div class="modal-header">
+      <h3 id="blogModalTitle">Add Blog Post</h3>
+      <button class="modal-close" onclick="closeModal('blogModalOverlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="blogEditId" value="">
+      <div class="form-group"><label>Post Title *</label><input type="text" id="blogTitle" placeholder="Enter post title"></div>
+      <div class="form-group"><label>Tag / Category</label><input type="text" id="blogTag" placeholder="e.g. Research Update, Science Brief"></div>
+      <div class="form-group"><label>Excerpt / Summary *</label><textarea id="blogExcerpt" rows="4" placeholder="Short description shown on the homepage"></textarea></div>
+      <div class="form-group"><label>Date</label><input type="text" id="blogDate" placeholder="e.g. September 2026"></div>
+      <div class="form-group">
+        <label>Cover Image</label>
+        <input type="file" id="blogImgFile" accept="image/*" onchange="previewBlogImg(this)">
+        <img id="blogImgPreview" src="" alt="Preview" style="max-width:100%;max-height:180px;margin-top:.75rem;border-radius:8px;display:none;">
+        <input type="hidden" id="blogImgData">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-admin-outline" onclick="closeModal('blogModalOverlay')">Cancel</button>
+      <button class="btn-admin-primary" onclick="saveBlogPost()">Save Post</button>
     </div>
   </div>
 </div>

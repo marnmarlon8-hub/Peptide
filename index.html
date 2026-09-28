@@ -127,19 +127,30 @@
 </div>
 
 <!-- ================================================ -->
-<!-- ANNOUNCEMENT BAR                                 -->
+<!-- ANNOUNCEMENT BAR — MARQUEE                       -->
 <!-- ================================================ -->
-<div class="announcement-bar">
-  <div class="ann-inner">
-    <div class="ann-left">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-      <span data-t="free_shipping">Free Worldwide Shipping on Orders Over</span>
-      <strong id="free-ship-amount">$150.00</strong>
+<div class="announcement-bar marquee-bar">
+  <div class="marquee-track">
+    <div class="marquee-content" id="marqueeContent">
+      <span class="mq-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C8A96A" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>&nbsp;Free Shipping on Orders Over <strong>$999.99</strong></span>
+      <span class="mq-sep">✦</span>
+      <span class="mq-item">🔬&nbsp;For Research Purposes Only</span>
+      <span class="mq-sep">✦</span>
+      <span class="mq-item">📧&nbsp;Contact Us: <a href="mailto:support@labsourced.co" style="color:#C8A96A;text-decoration:none;">support@labsourced.co</a></span>
+      <span class="mq-sep">✦</span>
+      <span class="mq-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C8A96A" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>&nbsp;Free Shipping on Orders Over <strong>$999.99</strong></span>
+      <span class="mq-sep">✦</span>
+      <span class="mq-item">🔬&nbsp;For Research Purposes Only</span>
+      <span class="mq-sep">✦</span>
+      <span class="mq-item">📧&nbsp;Contact Us: <a href="mailto:support@labsourced.co" style="color:#C8A96A;text-decoration:none;">support@labsourced.co</a></span>
+      <span class="mq-sep">✦</span>
+      <span class="mq-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C8A96A" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>&nbsp;Free Shipping on Orders Over <strong>$999.99</strong></span>
+      <span class="mq-sep">✦</span>
+      <span class="mq-item">🔬&nbsp;For Research Purposes Only</span>
+      <span class="mq-sep">✦</span>
+      <span class="mq-item">📧&nbsp;Contact Us: <a href="mailto:support@labsourced.co" style="color:#C8A96A;text-decoration:none;">support@labsourced.co</a></span>
+      <span class="mq-sep">✦</span>
     </div>
-    <div class="ann-sep"></div>
-    <a href="track.html" class="ann-track" data-t="track_order">
-      Track Order <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-    </a>
   </div>
 </div>
 
@@ -386,30 +397,46 @@
 </section>
 
 <!-- ================================================ -->
-<!-- TESTIMONIALS SECTION                             -->
+<!-- TESTIMONIALS — INFINITE HORIZONTAL SCROLL        -->
 <!-- ================================================ -->
 <section class="testimonials">
+  <div class="section-header text-center" style="padding:0 1rem;">
+    <h2 class="section-title">Trusted by Researchers</h2>
+    <p class="section-sub">What scientists and professionals say about Labsourced</p>
+  </div>
+  <div class="testi-marquee-wrap">
+    <div class="testi-marquee-track" id="testiTrack">
+      <!-- JS will inject cards -->
+    </div>
+  </div>
+</section>
+
+<!-- ================================================ -->
+<!-- FAQ SECTION                                      -->
+<!-- ================================================ -->
+<section class="faq-section" id="faqSection">
   <div class="container">
     <div class="section-header text-center">
-      <h2 class="section-title">Trusted by Researchers</h2>
-      <p class="section-sub">What scientists and professionals say about Labsourced</p>
+      <h2 class="section-title">Frequently Asked Questions</h2>
+      <p class="section-sub">Everything you need to know about our research peptides</p>
     </div>
-    <div class="testimonial-grid">
-      <div class="testimonial-card">
-        <div class="stars">★★★★★</div>
-        <p class="testimonial-text">"The purity and consistency of Labsourced peptides have significantly improved the reliability of our ongoing research studies. Exceptional quality."</p>
-        <p class="testimonial-author">— Dr. James M., Clinical Researcher</p>
-      </div>
-      <div class="testimonial-card">
-        <div class="stars">★★★★★</div>
-        <p class="testimonial-text">"Shipping was remarkably fast, and the packaging reflects their premium standards. BPC-157 yielded perfect analytical results."</p>
-        <p class="testimonial-author">— Sarah T., Lead Scientist</p>
-      </div>
-      <div class="testimonial-card">
-        <div class="stars">★★★★★</div>
-        <p class="testimonial-text">"As a biotechnology facility, we require absolute precision. Labsourced provides the transparency and documentation we need for compliance."</p>
-        <p class="testimonial-author">— Michael R., Lab Director</p>
-      </div>
+    <div class="faq-list" id="faqList">
+      <!-- FAQ items injected by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ================================================ -->
+<!-- BLOG SECTION                                     -->
+<!-- ================================================ -->
+<section class="blog-section" id="blogSection">
+  <div class="container">
+    <div class="section-header text-center">
+      <h2 class="section-title">Research Insights</h2>
+      <p class="section-sub">The latest from our scientific team</p>
+    </div>
+    <div class="blog-grid" id="blogGrid">
+      <!-- Blog posts injected by JS -->
     </div>
   </div>
 </section>
@@ -490,5 +517,6 @@
 <script src="js/supabase.js"></script>
 <script src="js/script.js"></script>
 <script src="js/home.js"></script>
+<script src="js/home-extras.js"></script>
 </body>
 </html>

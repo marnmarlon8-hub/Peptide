@@ -906,3 +906,223 @@ function showToast(msg, type = 'success') {
   setTimeout(() => toast.style.transform = 'translateX(0)', 10);
   setTimeout(() => { toast.style.transform = 'translateX(200%)'; setTimeout(() => toast.remove(), 400); }, 3500);
 }
+
+// =============================================
+// FAQ MANAGEMENT (Stored in localStorage for now)
+// =============================================
+const DEFAULT_FAQS = [
+  { q: "What are research peptides?", a: "Research peptides are short chains of amino acids used exclusively for scientific and laboratory research. They are not intended for human or veterinary use and are sold strictly for in vitro and in vivo research applications." },
+  { q: "Are your peptides tested for purity?", a: "Yes. Every batch undergoes rigorous third-party HPLC testing and mass spectrometry analysis. A Certificate of Analysis (COA) is provided with every order, confirming purity, composition, and batch number." },
+  { q: "What is the minimum purity level of your peptides?", a: "All Labsourced peptides carry a minimum purity of 98% as verified by HPLC analysis. Most batches achieve 99%+ purity. The exact figure is documented on your Certificate of Analysis." },
+  { q: "How are products shipped?", a: "All orders are shipped in temperature-controlled packaging to maintain peptide stability during transit. We offer express international shipping with full tracking and discreet, professional packaging." },
+  { q: "How long does shipping take?", a: "Domestic orders typically arrive within 2–4 business days. International orders take 5–10 business days depending on destination and customs clearance." }
+];
+
+let adminFaqs = [];
+
+function loadAdminFaqs() {
+  const stored = localStorage.getItem('labsourced_faqs');
+  adminFaqs = stored ? JSON.parse(stored) : [...DEFAULT_FAQS];
+  renderAdminFaqs();
+}
+
+function renderAdminFaqs() {
+  const tbody = document.getElementById('faqAdminBody');
+  if (!tbody) return;
+  tbody.innerHTML = adminFaqs.map((f, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td style="font-weight:600">${f.q}</td>
+      <td>
+        <div class="action-btns">
+          <button class="btn-icon" onclick="openFaqModal(${i})" title="Edit">✏️</button>
+          <button class="btn-icon" onclick="deleteFaq(${i})" title="Delete" style="color:#e74c3c">🗑️</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openFaqModal(index) {
+  document.getElementById('faqEditIndex').value = index === null ? '' : index;
+  if (index !== null) {
+    document.getElementById('faqQ').value = adminFaqs[index].q;
+    document.getElementById('faqA').value = adminFaqs[index].a;
+    document.getElementById('faqModalTitle').textContent = 'Edit FAQ';
+  } else {
+    document.getElementById('faqQ').value = '';
+    document.getElementById('faqA').value = '';
+    document.getElementById('faqModalTitle').textContent = 'Add FAQ';
+  }
+  document.getElementById('faqModalOverlay').classList.add('open');
+}
+window.openFaqModal = openFaqModal;
+
+function saveFaq() {
+  const idxStr = document.getElementById('faqEditIndex').value;
+  const q = document.getElementById('faqQ').value.trim();
+  const a = document.getElementById('faqA').value.trim();
+  
+  if (!q || !a) { alert('Question and Answer are required.'); return; }
+  
+  if (idxStr !== '') {
+    adminFaqs[parseInt(idxStr)] = { q, a };
+    showToast('FAQ updated');
+  } else {
+    adminFaqs.push({ q, a });
+    showToast('FAQ added');
+  }
+  
+  localStorage.setItem('labsourced_faqs', JSON.stringify(adminFaqs));
+  renderAdminFaqs();
+  closeModal('faqModalOverlay');
+}
+window.saveFaq = saveFaq;
+
+function deleteFaq(index) {
+  if (confirm('Are you sure you want to delete this FAQ?')) {
+    adminFaqs.splice(index, 1);
+    localStorage.setItem('labsourced_faqs', JSON.stringify(adminFaqs));
+    renderAdminFaqs();
+    showToast('FAQ deleted');
+  }
+}
+window.deleteFaq = deleteFaq;
+
+
+// =============================================
+// BLOG MANAGEMENT (Stored in localStorage for now)
+// =============================================
+const DEFAULT_BLOGS = [
+  {
+    id: 'b1', tag: 'Research Update', title: 'BPC-157: Mechanisms of Tissue Repair in Current Research',
+    excerpt: 'A review of the latest peer-reviewed findings on BPC-157\'s role in accelerating connective tissue regeneration and its implications for sports medicine research.',
+    date: 'September 2026', img: null
+  },
+  {
+    id: 'b2', tag: 'Science Brief', title: 'Semaglutide and Metabolic Research: What the Data Shows',
+    excerpt: 'Our scientific team reviews the growing body of evidence around GLP-1 receptor agonism and its role in metabolic disease research applications.',
+    date: 'August 2026', img: null
+  }
+];
+
+let adminBlogs = [];
+
+function loadAdminBlogs() {
+  const stored = localStorage.getItem('labsourced_blogs');
+  adminBlogs = stored ? JSON.parse(stored) : [...DEFAULT_BLOGS];
+  renderAdminBlogs();
+}
+
+function renderAdminBlogs() {
+  const grid = document.getElementById('blogAdminGrid');
+  if (!grid) return;
+  grid.innerHTML = adminBlogs.map(b => `
+    <div class="sc-card" style="margin-bottom:1rem;display:flex;gap:1rem;align-items:center;">
+      ${b.img ? `<img src="${b.img}" style="width:100px;height:70px;object-fit:cover;border-radius:8px">` : `<div style="width:100px;height:70px;background:#eee;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;">🔬</div>`}
+      <div style="flex:1">
+        <h4 style="margin-bottom:0.25rem">${b.title}</h4>
+        <div style="font-size:0.8rem;color:#666">${b.tag} | ${b.date}</div>
+      </div>
+      <div class="action-btns">
+        <button class="btn-icon" onclick="openBlogModal('${b.id}')" title="Edit">✏️</button>
+        <button class="btn-icon" onclick="deleteBlogPost('${b.id}')" title="Delete" style="color:#e74c3c">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openBlogModal(id) {
+  const idInput = document.getElementById('blogEditId');
+  const title = document.getElementById('blogTitle');
+  const tag = document.getElementById('blogTag');
+  const excerpt = document.getElementById('blogExcerpt');
+  const date = document.getElementById('blogDate');
+  const imgData = document.getElementById('blogImgData');
+  const preview = document.getElementById('blogImgPreview');
+  const fileInput = document.getElementById('blogImgFile');
+  
+  fileInput.value = '';
+  
+  if (id) {
+    const post = adminBlogs.find(b => b.id === id);
+    idInput.value = id;
+    title.value = post.title;
+    tag.value = post.tag || '';
+    excerpt.value = post.excerpt;
+    date.value = post.date || '';
+    imgData.value = post.img || '';
+    if (post.img) { preview.src = post.img; preview.style.display = 'block'; } else { preview.style.display = 'none'; }
+    document.getElementById('blogModalTitle').textContent = 'Edit Blog Post';
+  } else {
+    idInput.value = '';
+    title.value = '';
+    tag.value = '';
+    excerpt.value = '';
+    date.value = '';
+    imgData.value = '';
+    preview.style.display = 'none';
+    document.getElementById('blogModalTitle').textContent = 'Add Blog Post';
+  }
+  document.getElementById('blogModalOverlay').classList.add('open');
+}
+window.openBlogModal = openBlogModal;
+
+function previewBlogImg(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('blogImgData').value = e.target.result;
+      document.getElementById('blogImgPreview').src = e.target.result;
+      document.getElementById('blogImgPreview').style.display = 'block';
+    }
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+window.previewBlogImg = previewBlogImg;
+
+function saveBlogPost() {
+  const id = document.getElementById('blogEditId').value;
+  const title = document.getElementById('blogTitle').value.trim();
+  const tag = document.getElementById('blogTag').value.trim();
+  const excerpt = document.getElementById('blogExcerpt').value.trim();
+  const date = document.getElementById('blogDate').value.trim();
+  const img = document.getElementById('blogImgData').value;
+  
+  if (!title || !excerpt) { alert('Title and Excerpt are required.'); return; }
+  
+  if (id) {
+    const post = adminBlogs.find(b => b.id === id);
+    if (post) {
+      post.title = title; post.tag = tag; post.excerpt = excerpt; post.date = date; post.img = img;
+    }
+    showToast('Post updated');
+  } else {
+    adminBlogs.unshift({ id: 'b_' + Date.now(), title, tag, excerpt, date, img });
+    showToast('Post added');
+  }
+  
+  localStorage.setItem('labsourced_blogs', JSON.stringify(adminBlogs));
+  renderAdminBlogs();
+  closeModal('blogModalOverlay');
+}
+window.saveBlogPost = saveBlogPost;
+
+function deleteBlogPost(id) {
+  if (confirm('Are you sure you want to delete this blog post?')) {
+    adminBlogs = adminBlogs.filter(b => b.id !== id);
+    localStorage.setItem('labsourced_blogs', JSON.stringify(adminBlogs));
+    renderAdminBlogs();
+    showToast('Post deleted');
+  }
+}
+window.deleteBlogPost = deleteBlogPost;
+
+// Call initializers
+document.addEventListener('DOMContentLoaded', () => {
+  // Add these alongside other loads in admin.js
+  setTimeout(() => {
+    loadAdminFaqs();
+    loadAdminBlogs();
+  }, 500);
+});

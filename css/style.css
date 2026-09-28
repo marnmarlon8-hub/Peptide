@@ -101,7 +101,7 @@ ul {
     text-align: center;
 }
 
-/* 1. ANNOUNCEMENT BAR — Glorious luxury version */
+/* 1. ANNOUNCEMENT BAR — Marquee scrolling */
 .announcement-bar {
     background: linear-gradient(90deg, #062824 0%, #0B3D35 50%, #062824 100%);
     color: rgba(255,255,255,0.92);
@@ -111,87 +111,50 @@ ul {
     position: relative;
     overflow: hidden;
 }
-
-/* Subtle shimmer line across the top */
 .announcement-bar::after {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: 0; left: 0; right: 0;
     height: 1px;
     background: linear-gradient(90deg, transparent, rgba(200,169,106,0.5), transparent);
 }
 
-.ann-inner {
+/* Marquee */
+.marquee-bar { padding: 0; }
+.marquee-track {
+    overflow: hidden;
     width: 100%;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 1.5rem;
     display: flex;
     align-items: center;
-    justify-content: center;
+}
+.marquee-content {
+    display: flex;
+    align-items: center;
     gap: 0;
     white-space: nowrap;
+    animation: marqueeScroll 30s linear infinite;
+    will-change: transform;
 }
-
-.ann-left {
-    display: flex;
+@keyframes marqueeScroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+.mq-item {
+    display: inline-flex;
     align-items: center;
-    gap: 7px;
+    gap: 5px;
     font-size: 0.8rem;
     font-weight: 400;
     letter-spacing: 0.3px;
+    padding: 0 2rem;
 }
-
-.ann-left svg {
-    color: var(--accent-gold);
-    flex-shrink: 0;
-    opacity: 0.9;
-}
-
-#free-ship-amount {
-    color: var(--accent-gold);
-    font-weight: 800;
-    font-size: 0.95rem;
-    letter-spacing: 0.5px;
-    text-shadow: 0 0 12px rgba(200, 169, 106, 0.35);
-}
-
-.ann-sep {
-    width: 1px;
-    height: 18px;
-    background: rgba(255,255,255,0.2);
-    margin: 0 1rem;
+.mq-item strong { color: #C8A96A; font-weight: 800; }
+.mq-sep {
+    color: rgba(200,169,106,0.5);
+    font-size: 0.7rem;
     flex-shrink: 0;
 }
 
-.ann-track {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    color: rgba(255,255,255,0.88);
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.8rem;
-    letter-spacing: 0.3px;
-    transition: color 0.25s;
-    flex-shrink: 0;
-}
-
-.ann-track:hover {
-    color: var(--accent-gold);
-}
-
-/* Mobile: clean single line */
-@media (max-width: 600px) {
-    .announcement-bar { height: 42px; }
-    .ann-inner { padding: 0 1rem; justify-content: center; }
-    .ann-left { font-size: 0.75rem; gap: 6px; white-space: nowrap; }
-    .ann-left svg { width: 14px; height: 14px; }
-    #free-ship-amount { font-size: 0.8rem; }
-    .ann-sep, .ann-track { display: none; } /* Hide track order on very small screens to keep it clean */
-}
 
 /* 2. HEADER */
 .header {
@@ -1375,4 +1338,234 @@ ul {
 .related-section {
   padding: 5rem 0;
   background: var(--bg-color);
+}
+
+/* =============================================
+   TESTIMONIALS — INFINITE HORIZONTAL SCROLL
+   ============================================= */
+.testimonials {
+  padding: 6rem 0 4rem;
+  overflow: hidden;
+  background: var(--bg-color);
+}
+.testimonials .section-header { margin-bottom: 3rem; }
+.testimonials .section-title { margin-bottom: 0.75rem; }
+
+.testi-marquee-wrap {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+  /* Fade edges */
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+}
+.testi-marquee-track {
+  display: flex;
+  gap: 1.5rem;
+  width: max-content;
+  animation: testiScroll 120s linear infinite;
+  will-change: transform;
+}
+.testi-marquee-track:hover { animation-play-state: paused; }
+@keyframes testiScroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.testi-card {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 1.75rem;
+  width: 320px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  border: 1px solid rgba(6,51,47,0.06);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.testi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 35px rgba(0,0,0,0.1);
+}
+.testi-stars {
+  color: #C8A96A;
+  font-size: 1rem;
+  letter-spacing: 2px;
+  margin-bottom: 0.85rem;
+}
+.testi-text {
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: #444;
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+.testi-author {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--primary-dark-green);
+  letter-spacing: 0.3px;
+}
+.testi-role {
+  font-size: 0.72rem;
+  color: #999;
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+/* =============================================
+   FAQ SECTION
+   ============================================= */
+.faq-section {
+  padding: 6rem 0;
+  background: #fff;
+}
+.faq-list {
+  max-width: 820px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.faq-item {
+  border-bottom: 1px solid rgba(6,51,47,0.1);
+}
+.faq-item:first-child { border-top: 1px solid rgba(6,51,47,0.1); }
+.faq-q {
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 1.4rem 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--primary-dark-green);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  transition: color 0.2s;
+}
+.faq-q:hover { color: #C8A96A; }
+.faq-icon {
+  font-size: 1.4rem;
+  font-weight: 300;
+  flex-shrink: 0;
+  color: #C8A96A;
+  transition: transform 0.3s ease;
+  line-height: 1;
+}
+.faq-item.open .faq-icon { transform: rotate(45deg); }
+.faq-a {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, padding 0.3s ease;
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.75;
+}
+.faq-item.open .faq-a {
+  max-height: 500px;
+  padding-bottom: 1.4rem;
+}
+
+/* =============================================
+   BLOG SECTION
+   ============================================= */
+.blog-section {
+  padding: 6rem 0;
+  background: var(--bg-color);
+}
+.blog-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-top: 1rem;
+}
+.blog-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  border: 1px solid rgba(6,51,47,0.06);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+.blog-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.1);
+}
+.blog-card-img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+.blog-card-img-placeholder {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(135deg, #0B3D35 0%, #06332F 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(200,169,106,0.6);
+  font-size: 3rem;
+}
+.blog-card-body {
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.blog-card-tag {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #C8A96A;
+  margin-bottom: 0.6rem;
+}
+.blog-card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--primary-dark-green);
+  margin-bottom: 0.75rem;
+  line-height: 1.35;
+}
+.blog-card-excerpt {
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.65;
+  flex: 1;
+}
+.blog-card-footer {
+  margin-top: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #aaa;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  padding-top: 1rem;
+}
+.blog-read-more {
+  color: var(--primary-dark-green);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: gap 0.2s;
+}
+.blog-read-more:hover { gap: 8px; color: #C8A96A; }
+
+@media (max-width: 900px) {
+  .blog-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .blog-grid { grid-template-columns: 1fr; }
+  .testi-card { width: 280px; }
 }
