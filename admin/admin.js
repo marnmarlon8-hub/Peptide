@@ -42,7 +42,12 @@ function getCustomLocal(table) {
   try { return JSON.parse(localStorage.getItem('ls_custom_' + table)) || []; } catch(e) { return []; }
 }
 function setCustomLocal(table, items) {
-  localStorage.setItem('ls_custom_' + table, JSON.stringify(items));
+  try {
+    localStorage.setItem('ls_custom_' + table, JSON.stringify(items));
+  } catch (e) {
+    console.warn('LocalStorage limit reached. Could not save to local fallback:', e);
+    alert('Warning: Your browser storage is full. Large files (like big COA PDFs) could not be saved locally because the Supabase database blocked the upload. Please use the "Supabase RLS Fix" button to enable direct database saving.');
+  }
 }
 
 async function adminFetch(table, params = {}) {
@@ -89,6 +94,20 @@ async function adminPost(table, data) {
       return [newObj];
     }
     const json = JSON.parse(txt);
+    
+    // Detect silent column drops (e.g. coa_urls missing in DB schema)
+    let droppedColumns = false;
+    for (const key of Object.keys(data)) {
+      if (json[0] && !(key in json[0])) droppedColumns = true;
+    }
+    if (droppedColumns) {
+      console.warn(`adminPost: Supabase dropped columns on ${table}. Saving override locally.`);
+      const newObj = { ...json[0], ...data };
+      const local = getCustomLocal(table);
+      local.push(newObj);
+      setCustomLocal(table, local);
+      return [newObj];
+    }
     return json;
   } catch(e) {
     console.warn(`adminPost exception on ${table}:`, e);
@@ -116,6 +135,10 @@ async function adminPatch(table, data, filter) {
     }
   }
 
+  let dbSuccess = false;
+  let droppedColumns = false;
+  let returnedJson = null;
+
   try {
     let url = `${SUPABASE_URL}/rest/v1/${table}?${new URLSearchParams(filter).toString()}`;
     const res = await fetch(url, {
@@ -123,10 +146,43 @@ async function adminPatch(table, data, filter) {
       headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
       body: JSON.stringify(data)
     });
-    if (res.ok) return res.json();
+    if (res.ok) {
+      dbSuccess = true;
+      returnedJson = await res.json();
+      
+      // Check if Supabase silently dropped columns (like coa_urls)
+      if (returnedJson && returnedJson[0]) {
+        for (const key of Object.keys(data)) {
+          if (!(key in returnedJson[0])) droppedColumns = true;
+        }
+      }
+    }
   } catch(e) {
     console.warn(`adminPatch exception on ${table}:`, e);
   }
+
+  // If DB update failed OR Supabase dropped columns, save override locally so the user's edits are not lost
+  if ((!dbSuccess || droppedColumns) && targetId) {
+    const local = getCustomLocal(table);
+    const idx = local.findIndex(x => x.id === targetId);
+    if (idx === -1) {
+      // Find original to merge
+      let original = {};
+      if (table === 'products') original = allProducts.find(x => x.id === targetId) || {};
+      else if (table === 'categories') original = allCategories.find(x => x.id === targetId) || {};
+      else if (table === 'product_variations') original = allVariations.find(x => x.id === targetId) || {};
+      
+      const newObj = { ...original, ...data, id: targetId, updated_at: new Date().toISOString() };
+      local.push(newObj);
+      setCustomLocal(table, local);
+    } else if (droppedColumns) {
+      // Already in local, but we need to ensure the dropped columns are merged since it bypassed the pre-patch merge if it was just added
+      local[idx] = { ...local[idx], ...data, updated_at: new Date().toISOString() };
+      setCustomLocal(table, local);
+    }
+  }
+
+  if (dbSuccess && !droppedColumns) return returnedJson;
   return [data];
 }
 
