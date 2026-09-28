@@ -238,6 +238,7 @@ function handleNewsletter(e) {
   if (email) {
     showToast('Thank you for subscribing!', 'success');
     document.getElementById('newsletterForm').reset();
+  }
 }
 window.handleNewsletter = handleNewsletter;
 
