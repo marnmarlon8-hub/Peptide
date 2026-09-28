@@ -101,6 +101,9 @@ async function adminPost(table, data) {
     });
     const txt = await res.text();
     if (!res.ok) {
+      if (res.status === 401 || res.status === 403 || txt.includes('security policy')) {
+        showRlsFixModal();
+      }
       console.warn(`adminPost error on ${table}: ${txt}. Saving locally.`);
       const newId = data.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'loc_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8));
       const newObj = { id: newId, ...data, created_at: new Date().toISOString() };
@@ -162,7 +165,12 @@ async function adminPatch(table, data, filter) {
       headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
       body: JSON.stringify(data)
     });
-    if (res.ok) {
+    if (!res.ok) {
+      const errorTxt = await res.text();
+      if (res.status === 401 || res.status === 403 || errorTxt.includes('security policy')) {
+        showRlsFixModal();
+      }
+    } else {
       dbSuccess = true;
       returnedJson = await res.json();
       
@@ -1477,3 +1485,80 @@ document.addEventListener('DOMContentLoaded', () => {
     loadAdminBlogs();
   }, 500);
 });
+
+// =============================================
+// DATABASE RLS FIX MODAL
+// =============================================
+function showRlsFixModal() {
+  if (document.getElementById('rlsFixModalOverlay')) {
+    document.getElementById('rlsFixModalOverlay').classList.add('open');
+    return;
+  }
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.id = 'rlsFixModalOverlay';
+  overlay.innerHTML = `
+    <div class="modal-box modal-lg" style="max-width:700px;border:3px solid #ff4444;box-shadow:0 20px 60px rgba(255,0,0,0.2);">
+      <div class="modal-header" style="background:#ff4444;color:white;padding:1.2rem;border-radius:18px 18px 0 0;">
+        <h3 style="margin:0;font-family:'Inter',sans-serif;font-weight:700;font-size:1.3rem;">⚠️ Critical Database Action Required</h3>
+        <button class="modal-close" style="color:white;background:transparent;border:none;font-size:1.5rem;cursor:pointer;" onclick="closeModal('rlsFixModalOverlay')">✕</button>
+      </div>
+      <div class="modal-body" style="padding:2rem;">
+        <p style="font-size:1.05rem;color:#333;margin-bottom:1rem;line-height:1.6;font-family:'Inter',sans-serif;">
+          <strong>Your Supabase database is blocking you from saving changes!</strong><br>
+          Because of strict Row-Level Security (RLS) rules, your edits are only being saved to this device's memory, which is why updates aren't showing up on other phones or computers.
+        </p>
+        <p style="font-size:1rem;color:#555;margin-bottom:1.5rem;line-height:1.6;">
+          To fix this permanently, log into your <a href="https://supabase.com/dashboard" target="_blank" style="color:#C8A96A;font-weight:bold;">Supabase Dashboard</a>, go to the <strong>SQL Editor</strong>, paste the exact script below, and click Run.
+        </p>
+        <div style="background:#1a1a1a;padding:1.5rem;border-radius:12px;position:relative;">
+          <button onclick="navigator.clipboard.writeText(document.getElementById('sqlFixCode').innerText); this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy',2000)" style="position:absolute;top:10px;right:10px;background:#C8A96A;color:black;border:none;padding:0.4rem 0.8rem;border-radius:6px;cursor:pointer;font-weight:bold;font-size:0.8rem;">Copy</button>
+          <pre id="sqlFixCode" style="color:#00ffcc;font-family:monospace;font-size:0.85rem;overflow-x:auto;margin:0;white-space:pre-wrap;">
+-- 1. Enable RLS on core tables
+ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_variations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
+
+-- 2. Clean old conflicting policies
+DROP POLICY IF EXISTS "Public Read Products" ON public.products;
+DROP POLICY IF EXISTS "Admin All Products" ON public.products;
+DROP POLICY IF EXISTS "Public Read Categories" ON public.categories;
+DROP POLICY IF EXISTS "Admin All Categories" ON public.categories;
+DROP POLICY IF EXISTS "Public Read Variations" ON public.product_variations;
+DROP POLICY IF EXISTS "Admin All Variations" ON public.product_variations;
+DROP POLICY IF EXISTS "Admin All Orders" ON public.orders;
+
+-- 3. Public Read Access
+CREATE POLICY "Public Read Products" ON public.products FOR SELECT USING (true);
+CREATE POLICY "Public Read Categories" ON public.categories FOR SELECT USING (true);
+CREATE POLICY "Public Read Variations" ON public.product_variations FOR SELECT USING (true);
+
+-- 4. Public Write Access (for orders/reviews)
+CREATE POLICY "Public Insert Orders" ON public.orders FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public Insert Order Items" ON public.order_items FOR INSERT WITH CHECK (true);
+
+-- 5. Admin Full Access
+CREATE POLICY "Admin All Products" ON public.products FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Admin All Categories" ON public.categories FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Admin All Variations" ON public.product_variations FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Admin All Orders" ON public.orders FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Admin All Order Items" ON public.order_items FOR ALL USING (auth.role() = 'authenticated');
+
+-- 6. Storage Permissions
+INSERT INTO storage.buckets (id, name, public) VALUES ('product-images', 'product-images', true) ON CONFLICT DO NOTHING;
+DROP POLICY IF EXISTS "Public Read Images" ON storage.objects;
+DROP POLICY IF EXISTS "Admin Insert Images" ON storage.objects;
+DROP POLICY IF EXISTS "Admin Update Images" ON storage.objects;
+CREATE POLICY "Public Read Images" ON storage.objects FOR SELECT USING (bucket_id = 'product-images');
+CREATE POLICY "Admin Insert Images" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'product-images' AND auth.role() = 'authenticated');
+CREATE POLICY "Admin Update Images" ON storage.objects FOR UPDATE USING (bucket_id = 'product-images' AND auth.role() = 'authenticated');
+          </pre>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+window.showRlsFixModal = showRlsFixModal;
