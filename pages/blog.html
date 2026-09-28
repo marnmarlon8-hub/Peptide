@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Research Blog | Labsourced</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/welcome.css">
+  <style>
+    .legal-hero { background:linear-gradient(135deg,#06332F,#0B4A43); padding:4rem 0 3rem; text-align:center; }
+    .legal-hero h1 { font-family:'Cormorant Garamond',serif; font-size:clamp(2rem,4vw,3rem); font-weight:700; color:#fff; }
+    .legal-hero p { color:rgba(255,255,255,.6); font-family:'Inter',sans-serif; font-size:.85rem; margin-top:.5rem; }
+    .legal-content { max-width:780px; margin:0 auto; padding:3rem 1.5rem 5rem; font-family:'Inter',sans-serif; }
+    .return-home-btn { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 2rem; padding: 0.6rem 1.2rem; border: 1.5px solid #06332F; border-radius: 8px; color: #06332F; text-decoration: none; font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600; transition: all 0.2s ease; }
+    .return-home-btn:hover { background: #06332F; color: #fff; }
+    
+    .blog-post { margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid #eee; }
+    .blog-title { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 700; color: #06332F; margin-bottom: 0.5rem; }
+    .blog-date { font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #C8A96A; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 1rem; }
+    .blog-excerpt { font-family: 'Inter', sans-serif; font-size: 0.95rem; color: #555; line-height: 1.7; margin-bottom: 1rem; }
+    .read-more { font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; color: #06332F; text-decoration: none; }
+    .read-more:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<header class="header" id="header">
+  <div class="container header-inner">
+    <div class="logo"><a href="../index.html"><img src="../Logo.png" alt="Labsourced" class="nav-logo"></a></div>
+    <nav class="desktop-nav"><ul class="nav-links">
+      <li><a href="../shop.html">Shop</a></li>
+      <li><a href="../track.html">Track Order</a></li>
+    </ul></nav>
+    <div class="header-icons">
+      <button aria-label="Cart" class="icon-btn cart-icon-btn" id="cartBtn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span class="cart-count">0</span>
+      </button>
+    </div>
+  </div>
+</header>
+<div class="cart-overlay" id="cartOverlay"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-drawer-header"><h3>Cart</h3><button class="cart-close-btn" id="cartCloseBtn">✕</button></div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-drawer-footer" id="cartFooter" style="display:none">
+    <div class="cart-total-row"><span>Total</span><span id="cartTotal"></span></div>
+    <a href="../checkout.html" class="btn btn-primary btn-full">Checkout</a>
+  </div>
+</div>
+
+<div class="legal-hero">
+  <h1>Research Blog</h1>
+  <p>Latest insights, studies, and peptide research news.</p>
+</div>
+
+<div class="legal-content">
+  <a href="../index.html" class="return-home-btn">&larr; Return to Home</a>
+  
+  <div class="blog-post">
+    <div class="blog-date">September 15, 2026</div>
+    <h2 class="blog-title">Understanding BPC-157 Mechanisms in Tissue Repair</h2>
+    <div class="blog-excerpt">Recent studies have shown promising results regarding the angiogenic properties of BPC-157 in lab environments. We explore the current literature on how this 15-amino acid sequence influences vascular endothelial growth factor (VEGF) expression.</div>
+    <a href="#" class="read-more">Read Full Article &rarr;</a>
+  </div>
+
+  <div class="blog-post">
+    <div class="blog-date">August 28, 2026</div>
+    <h2 class="blog-title">The Synergistic Effects of CJC-1295 and Ipamorelin</h2>
+    <div class="blog-excerpt">Combining GHRH analogues with GHRPs is a standard practice in neuroendocrine research. This article breaks down the pharmacological synergy between CJC-1295 and Ipamorelin when studying pulse frequency.</div>
+    <a href="#" class="read-more">Read Full Article &rarr;</a>
+  </div>
+
+</div>
+
+<script src="../js/supabase.js"></script>
+<script src="../js/script.js"></script>
+</body>
+</html>
