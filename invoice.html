@@ -230,7 +230,7 @@
         <h2>INVOICE</h2>
         <p><strong>Tracking No:</strong> <span id="invTracking"></span></p>
         <p><strong>Date:</strong> <span id="invDate"></span></p>
-        <p><strong>Status:</strong> <span style="color:var(--accent);font-weight:600;">PAID</span></p>
+        <p><strong>Status:</strong> <span id="invStatus" style="font-weight:600;"></span></p>
       </div>
     </div>
 
@@ -294,17 +294,40 @@
   <script src="js/supabase.js"></script>
   <script src="js/script.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       try {
-        const dataStr = LS.get('last_order_data');
-        if (!dataStr) throw new Error("No order data");
+        const urlParams = new URLSearchParams(window.location.search);
+        const trackCode = urlParams.get('track');
         
-        const data = JSON.parse(dataStr);
-        const order = data.order;
-        const items = data.items;
+        let order, items;
+
+        if (trackCode) {
+          // Fetch live data from Supabase
+          const orders = await db.query('orders', { filter: { tracking_code: `eq.${trackCode}` } });
+          if (!orders || orders.length === 0) throw new Error("Order not found in database.");
+          order = orders[0];
+          
+          items = await db.query('order_items', { filter: { order_id: `eq.${order.id}` } });
+        } else {
+          // Fallback to local storage
+          const dataStr = LS.get('last_order_data');
+          if (!dataStr) throw new Error("No order data");
+          const data = JSON.parse(dataStr);
+          order = data.order;
+          items = data.items;
+        }
 
         document.getElementById('invTracking').textContent = order.tracking_code;
         document.getElementById('invDate').textContent = new Date().toLocaleDateString();
+        
+        const statusEl = document.getElementById('invStatus');
+        const currentStatus = order.status || 'Pending';
+        statusEl.textContent = currentStatus.toUpperCase();
+        if (currentStatus.toLowerCase() === 'pending') {
+          statusEl.style.color = '#e67e22'; // Orange
+        } else {
+          statusEl.style.color = 'var(--accent)';
+        }
         
         document.getElementById('invName').textContent = order.full_name;
         document.getElementById('invEmail').textContent = order.email;

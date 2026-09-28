@@ -252,6 +252,12 @@ function renderTrackResult(order, items) {
           <div class="tc-meta-item"><strong>${orderDate}</strong>Order Date</div>
           <div class="tc-meta-item"><strong>$${order.total_usd}</strong>Total</div>
         </div>
+        <div style="margin-top: 1.5rem;">
+          <a href="invoice.html?track=${order.tracking_code}" target="_blank" class="btn btn-outline" style="border-color:#C8A96A;color:#C8A96A;background:rgba(200,169,106,0.1);padding:0.6rem 1rem;font-size:0.8rem;border-radius:6px;display:inline-flex;align-items:center;gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Download Invoice
+          </a>
+        </div>
       </div>
       <div class="track-card-body">
         <div class="track-status-label">Order Timeline</div>
