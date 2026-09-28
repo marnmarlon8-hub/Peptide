@@ -915,7 +915,17 @@ const DEFAULT_FAQS = [
   { q: "Are your peptides tested for purity?", a: "Yes. Every batch undergoes rigorous third-party HPLC testing and mass spectrometry analysis. A Certificate of Analysis (COA) is provided with every order, confirming purity, composition, and batch number." },
   { q: "What is the minimum purity level of your peptides?", a: "All Labsourced peptides carry a minimum purity of 98% as verified by HPLC analysis. Most batches achieve 99%+ purity. The exact figure is documented on your Certificate of Analysis." },
   { q: "How are products shipped?", a: "All orders are shipped in temperature-controlled packaging to maintain peptide stability during transit. We offer express international shipping with full tracking and discreet, professional packaging." },
-  { q: "How long does shipping take?", a: "Domestic orders typically arrive within 2–4 business days. International orders take 5–10 business days depending on destination and customs clearance." }
+  { q: "How long does shipping take?", a: "Domestic orders typically arrive within 2–4 business days. International orders take 5–10 business days depending on destination and customs clearance." },
+  { q: "Do you ship internationally?", a: "Yes, we ship to most countries worldwide. It is the customer's responsibility to ensure that importing research chemicals is permitted in their jurisdiction. Please review your local regulations before ordering." },
+  { q: "How should I store my peptides?", a: "Lyophilized (freeze-dried) peptides should be stored at -20°C or below, away from light and moisture. Once reconstituted, peptides should be refrigerated at 2–8°C and used within a reasonable timeframe." },
+  { q: "What is the shelf life of your peptides?", a: "Lyophilized peptides stored properly at -20°C typically have a shelf life of 24 months or more. Reconstituted peptides should generally be used within 30 days when stored at 2–8°C." },
+  { q: "Can I request a Certificate of Analysis for a specific batch?", a: "Yes. COA documents are available for every batch we sell. Contact our support team at support@labsourced.co with your order number and batch reference to request documentation." },
+  { q: "Do you offer bulk or wholesale pricing?", a: "Yes. We offer competitive pricing for bulk and wholesale orders. Please contact us directly at support@labsourced.co to discuss your requirements and receive a customised quote." },
+  { q: "What payment methods do you accept?", a: "We accept major credit cards, bank transfers, and other approved payment methods. All transactions are secured with industry-standard encryption for your protection." },
+  { q: "What is your refund policy?", a: "We offer refunds or replacements for products that are damaged, defective, or do not match their Certificate of Analysis. Please review our full Refund Policy page for complete terms and conditions." },
+  { q: "Can I track my order?", a: "Yes. A tracking number is provided via email as soon as your order is dispatched. You can also use our Track Order page on the website to check real-time delivery status." },
+  { q: "Are your products suitable for human consumption?", a: "No. All Labsourced products are sold strictly for research purposes only and are not intended for human or animal consumption, therapeutic use, or any application outside of laboratory research." },
+  { q: "How do I contact customer support?", a: "You can reach our support team at support@labsourced.co. We aim to respond to all inquiries within 24 business hours. For urgent matters, please include 'URGENT' in your subject line." }
 ];
 
 let adminFaqs = [];
@@ -1003,6 +1013,26 @@ const DEFAULT_BLOGS = [
     id: 'b2', tag: 'Science Brief', title: 'Semaglutide and Metabolic Research: What the Data Shows',
     excerpt: 'Our scientific team reviews the growing body of evidence around GLP-1 receptor agonism and its role in metabolic disease research applications.',
     date: 'August 2026', img: null
+  },
+  {
+    id: 'b3', tag: 'Lab Insight', title: 'Understanding HPLC Testing: How We Verify Peptide Purity',
+    excerpt: 'An inside look at the HPLC analysis process used to verify every batch of peptides before it leaves our facility — and what to look for in a Certificate of Analysis.',
+    date: 'August 2026', img: null
+  },
+  {
+    id: 'b4', tag: 'Research Update', title: 'TB-500 and Wound Healing: A Summary of Current Evidence',
+    excerpt: 'We explore the most compelling research findings on Thymosin Beta-4 and its role in promoting cellular migration, angiogenesis, and tissue recovery.',
+    date: 'July 2026', img: null
+  },
+  {
+    id: 'b5', tag: 'Science Brief', title: 'CJC-1295 and Growth Hormone Research: Key Considerations',
+    excerpt: 'A scientific overview of CJC-1295\'s mechanism of action, dosing considerations in research contexts, and what current studies reveal about its applications.',
+    date: 'July 2026', img: null
+  },
+  {
+    id: 'b6', tag: 'Lab Insight', title: 'Peptide Storage Best Practices for Research Facilities',
+    excerpt: 'Proper storage is critical to peptide integrity. Our team shares evidence-based guidelines for maintaining peptide stability in research laboratory environments.',
+    date: 'June 2026', img: null
   }
 ];
 
