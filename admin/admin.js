@@ -529,7 +529,13 @@ async function saveCategory() {
   const slug = document.getElementById('cm_slug').value.trim() || name.toLowerCase().replace(/\s+/g,'-');
   if (!name) { alert('Category name required'); return; }
 
-  const data = { name, slug, description: document.getElementById('cm_desc').value };
+  const data = { 
+    name, 
+    slug, 
+    description: document.getElementById('cm_desc').value,
+    is_active: true,
+    sort_order: allCategories.length + 1
+  };
   try {
     let savedId = id;
     if (id) {
@@ -538,11 +544,31 @@ async function saveCategory() {
       const res = await adminPost('categories', data);
       savedId = res[0]?.id;
     }
-    // Save pending category image
-    if (savedId && pendingCatImage) {
-      localStorage.setItem(`admin_cat_img_${savedId}`, pendingCatImage);
+    
+    if (savedId) {
+      // Upload category image to Supabase Storage
+      const imgInput = document.getElementById('cm_image');
+      if (imgInput && imgInput.files && imgInput.files[0]) {
+        const file = imgInput.files[0];
+        const ext = file.name.split('.').pop();
+        const path = `categories/${savedId}.${ext}`;
+        try {
+          const imgUrl = await uploadFileToStorage('product-images', path, file);
+          await adminPatch('categories', { image_url: imgUrl }, { 'id': `eq.${savedId}` });
+          // Also update local preview cache
+          localStorage.setItem(`admin_cat_img_${savedId}`, imgUrl);
+        } catch(imgErr) {
+          console.warn('Image upload failed, saving to localStorage:', imgErr);
+          if (pendingCatImage) {
+            localStorage.setItem(`admin_cat_img_${savedId}`, pendingCatImage);
+          }
+        }
+      } else if (pendingCatImage) {
+        localStorage.setItem(`admin_cat_img_${savedId}`, pendingCatImage);
+      }
       pendingCatImage = null;
     }
+
     closeModal('categoryModalOverlay');
     showToast('Category saved!');
     await loadAllData();
