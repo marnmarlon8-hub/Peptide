@@ -112,6 +112,23 @@ function renderProductDetail(product, reviews) {
 
       <button class="btn btn-primary pd-add-btn" onclick="addProductToCart()">🛒 ${t('add_to_cart')}</button>
 
+      ${product.coa_urls && product.coa_urls.length > 0 ? `
+      <div class="pd-coa-section" style="margin: 1.5rem 0; padding: 1.25rem; background: rgba(200,169,106,0.05); border: 1px solid rgba(200,169,106,0.2); border-radius: 12px;">
+        <h4 style="font-size:1rem; color:var(--primary-dark-green); margin-bottom: 0.75rem; display:flex; align-items:center; gap:8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          Certificates of Analysis (COA)
+        </h4>
+        <div style="display:flex; flex-direction:column; gap:0.5rem;">
+          ${product.coa_urls.map((url, idx) => `
+            <a href="${url}" target="_blank" style="display:inline-flex; align-items:center; gap:6px; color:var(--accent-gold); font-weight:500; font-size:0.9rem; text-decoration:none;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              View Document ${idx + 1}
+            </a>
+          `).join('')}
+        </div>
+      </div>
+      ` : ''}
+
       <div class="pd-tabs">
         <div class="pd-tab-nav">
           <button class="pd-tab-btn active" onclick="showTab('description', this)">Description</button>
