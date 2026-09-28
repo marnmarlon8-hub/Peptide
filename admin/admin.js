@@ -97,15 +97,17 @@ async function checkSupabaseSyncStatus() {
           headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken || SUPABASE_ANON_KEY}` }
         });
       }
-      // Clear any local-only items banner — sync is working!
+      // Write works! Auto-clear any stuck local items — they can't sync due to data issues
       const localProducts = getCustomLocal('products');
       const localCats = getCustomLocal('categories');
-      if (localProducts.length > 0 || localCats.length > 0) {
-        showSyncBanner(localProducts.length + localCats.length);
-        setSyncStatus(true, 'Working but has local cache');
-      } else {
-        setSyncStatus(true, 'All good');
+      const localVars = getCustomLocal('product_variations');
+      if (localProducts.length > 0 || localCats.length > 0 || localVars.length > 0) {
+        // Supabase is working — clear the stuck local items silently
+        ['products', 'categories', 'product_variations'].forEach(t => localStorage.removeItem('ls_custom_' + t));
+        document.getElementById('syncBanner')?.remove();
+        console.info('Auto-cleared local cache — Supabase writes are working, local items removed.');
       }
+      setSyncStatus(true, 'All good');
     } else {
       setSyncStatus(false, 'Write blocked');
     }
@@ -303,130 +305,59 @@ async function adminFetch(table, params = {}) {
 }
 
 async function adminPost(table, data) {
+  // Strip fields that don't exist as DB columns to prevent false 'local only' triggers
+  const cleanData = { ...data };
+  delete cleanData.coa_urls;    // COA data is embedded inside detailed_description
+  delete cleanData._local_only; // Internal tracking flag
+
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
       method: 'POST',
-      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-      body: JSON.stringify(data)
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken || SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify(cleanData)
     });
     const txt = await res.text();
     if (!res.ok) {
-      if (res.status === 401 || res.status === 403 || txt.includes('security policy') || txt.includes('42501')) {
-        setSyncStatus(false, 'RLS blocked on insert');
-        showRlsFixModal();
-      }
-      console.warn(`adminPost error on ${table}: ${txt}. Saving locally as fallback.`);
-      const newId = data.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'loc_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8));
-      const newObj = { id: newId, ...data, created_at: new Date().toISOString(), _local_only: true };
-      const local = getCustomLocal(table);
-      local.push(newObj);
-      setCustomLocal(table, local);
-      // Show sync banner after a short delay to allow the current save flow to complete
-      setTimeout(() => checkSupabaseSyncStatus(), 500);
-      return [newObj];
+      console.error(`adminPost FAILED on ${table}: ${txt}`);
+      // Show error to admin — don't silently fallback to localStorage
+      const errData = JSON.parse(txt || '{}');
+      throw new Error(errData.message || errData.hint || `Database error (${res.status})`); 
     }
     const json = JSON.parse(txt);
-    
-    // Detect silent column drops (e.g. coa_urls missing in DB schema)
-    let droppedColumns = false;
-    for (const key of Object.keys(data)) {
-      if (json[0] && !(key in json[0])) droppedColumns = true;
-    }
-    if (droppedColumns) {
-      console.warn(`adminPost: Supabase dropped columns on ${table}. Saving override locally.`);
-      const newObj = { ...json[0], ...data };
-      const local = getCustomLocal(table);
-      local.push(newObj);
-      setCustomLocal(table, local);
-      return [newObj];
-    }
-    // Successful Supabase save — mark sync as working
     setSyncStatus(true);
     return json;
   } catch(e) {
-    console.warn(`adminPost exception on ${table}:`, e);
-    const newId = data.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'loc_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8));
-    const newObj = { id: newId, ...data, created_at: new Date().toISOString(), _local_only: true };
-    const local = getCustomLocal(table);
-    local.push(newObj);
-    setCustomLocal(table, local);
-    setTimeout(() => checkSupabaseSyncStatus(), 500);
-    return [newObj];
+    console.error(`adminPost exception on ${table}:`, e);
+    throw e; // Propagate error so the UI shows it, not silently saves locally
   }
 }
 
 async function adminPatch(table, data, filter) {
-  let targetId = null;
-  if (filter && filter.id && filter.id.startsWith('eq.')) {
-    targetId = filter.id.slice(3);
-  }
-
-  if (targetId) {
-    const local = getCustomLocal(table);
-    const idx = local.findIndex(x => x.id === targetId);
-    if (idx !== -1) {
-      local[idx] = { ...local[idx], ...data, updated_at: new Date().toISOString() };
-      setCustomLocal(table, local);
-    }
-  }
-
-  let dbSuccess = false;
-  let droppedColumns = false;
-  let returnedJson = null;
+  // Strip fields that don't exist as DB columns
+  const cleanData = { ...data };
+  delete cleanData.coa_urls;
+  delete cleanData._local_only;
 
   try {
     let url = `${SUPABASE_URL}/rest/v1/${table}?${new URLSearchParams(filter).toString()}`;
     const res = await fetch(url, {
       method: 'PATCH',
-      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-      body: JSON.stringify(data)
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken || SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify(cleanData)
     });
     if (!res.ok) {
       const errorTxt = await res.text();
-      if (res.status === 401 || res.status === 403 || errorTxt.includes('security policy') || errorTxt.includes('42501')) {
-        setSyncStatus(false, 'RLS blocked on update');
-        showRlsFixModal();
-      }
-    } else {
-      dbSuccess = true;
-      returnedJson = await res.json();
-      setSyncStatus(true);
-      
-      // Check if Supabase silently dropped columns (like coa_urls)
-      if (returnedJson && returnedJson[0]) {
-        for (const key of Object.keys(data)) {
-          if (!(key in returnedJson[0])) droppedColumns = true;
-        }
-      }
+      console.error(`adminPatch FAILED on ${table}: ${errorTxt}`);
+      const errData = JSON.parse(errorTxt || '{}');
+      throw new Error(errData.message || errData.hint || `Database error (${res.status})`);
     }
+    const returnedJson = await res.json();
+    setSyncStatus(true);
+    return returnedJson;
   } catch(e) {
-    console.warn(`adminPatch exception on ${table}:`, e);
+    console.error(`adminPatch exception on ${table}:`, e);
+    throw e;
   }
-
-  // If DB update failed OR Supabase dropped columns, save override locally so the user's edits are not lost
-  if ((!dbSuccess || droppedColumns) && targetId) {
-    const local = getCustomLocal(table);
-    const idx = local.findIndex(x => x.id === targetId);
-    if (idx === -1) {
-      // Find original to merge
-      let original = {};
-      if (table === 'products') original = allProducts.find(x => x.id === targetId) || {};
-      else if (table === 'categories') original = allCategories.find(x => x.id === targetId) || {};
-      else if (table === 'product_variations') original = allVariations.find(x => x.id === targetId) || {};
-      
-      const newObj = { ...original, ...data, id: targetId, updated_at: new Date().toISOString(), _local_only: true };
-      local.push(newObj);
-      setCustomLocal(table, local);
-    } else if (droppedColumns) {
-      local[idx] = { ...local[idx], ...data, updated_at: new Date().toISOString() };
-      setCustomLocal(table, local);
-    }
-    // Show sync warning after save
-    setTimeout(() => checkSupabaseSyncStatus(), 500);
-  }
-
-  if (dbSuccess && !droppedColumns) return returnedJson;
-  return [data];
 }
 
 async function adminDelete(table, filter) {
