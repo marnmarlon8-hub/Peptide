@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Labsourced — Premium research peptides for performance, recovery, and longevity. Lab-tested, worldwide shipping.">
+    <title>Labsourced | Premium Research Peptides</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/welcome.css">
+</head>
+<body>
+
+<!-- ================================================ -->
+<!-- WELCOME SELECTOR MODAL                           -->
+<!-- ================================================ -->
+<div id="welcome-overlay" class="welcome-overlay">
+  <div class="welcome-modal">
+    <div class="welcome-modal-top-accent"></div>
+    <div class="welcome-header">
+      <div class="welcome-logo">Labsourced</div>
+      <p class="welcome-subtitle">Global Research Peptide Supply</p>
+      <div class="welcome-access-badge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4"/><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/></svg>
+        For Verified Research Professionals Only
+      </div>
+    </div>
+    <div class="welcome-disclaimer">
+      <div class="disclaimer-icon">⚕</div>
+      <div class="disclaimer-body">
+        <strong>REGULATORY NOTICE:</strong> All compounds distributed by Labsourced are classified for <em>in vitro</em> and laboratory research use exclusively. Not for human or animal administration, clinical treatment, or diagnostic use. Misuse is prohibited under applicable law.
+      </div>
+    </div>
+    <div class="welcome-grid">
+      <div class="welcome-group">
+        <label>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Language
+        </label>
+        <div class="welcome-options" id="lang-options">
+          <button class="welcome-opt active" data-val="en">English</button>
+          <button class="welcome-opt" data-val="fr">Français</button>
+          <button class="welcome-opt" data-val="es">Español</button>
+          <button class="welcome-opt" data-val="de">Deutsch</button>
+          <button class="welcome-opt" data-val="it">Italiano</button>
+        </div>
+      </div>
+      <div class="welcome-group">
+        <label>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9.5c0-1.1.9-2 2-2h2a2 2 0 0 1 0 4h-2a2 2 0 0 0 0 4h2a2 2 0 0 0 2-2"/></svg>
+          Currency
+        </label>
+        <div class="welcome-options" id="currency-options">
+          <button class="welcome-opt active" data-val="USD" data-symbol="$" data-rate="1">USD ($)</button>
+          <button class="welcome-opt" data-val="EUR" data-symbol="€" data-rate="0.92">EUR (€)</button>
+          <button class="welcome-opt" data-val="GBP" data-symbol="£" data-rate="0.79">GBP (£)</button>
+          <button class="welcome-opt" data-val="CAD" data-symbol="CA$" data-rate="1.36">CAD ($)</button>
+          <button class="welcome-opt" data-val="AUD" data-symbol="A$" data-rate="1.53">AUD ($)</button>
+        </div>
+      </div>
+      <div class="welcome-group">
+        <label>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Shipping Country
+        </label>
+        <select id="country-select" class="welcome-select">
+          <option value="">Select Country...</option>
+          <option value="US">United States</option>
+          <option value="GB">United Kingdom</option>
+          <option value="CA">Canada</option>
+          <option value="AU">Australia</option>
+          <option value="DE">Germany</option>
+          <option value="FR">France</option>
+          <option value="ES">Spain</option>
+          <option value="IT">Italy</option>
+          <option value="NL">Netherlands</option>
+          <option value="BE">Belgium</option>
+          <option value="CH">Switzerland</option>
+          <option value="AT">Austria</option>
+          <option value="SE">Sweden</option>
+          <option value="NO">Norway</option>
+          <option value="DK">Denmark</option>
+          <option value="FI">Finland</option>
+          <option value="PT">Portugal</option>
+          <option value="IE">Ireland</option>
+          <option value="PL">Poland</option>
+          <option value="CZ">Czech Republic</option>
+          <option value="HU">Hungary</option>
+          <option value="RO">Romania</option>
+          <option value="GR">Greece</option>
+          <option value="ZA">South Africa</option>
+          <option value="NG">Nigeria</option>
+          <option value="KE">Kenya</option>
+          <option value="GH">Ghana</option>
+          <option value="BR">Brazil</option>
+          <option value="MX">Mexico</option>
+          <option value="AR">Argentina</option>
+          <option value="CL">Chile</option>
+          <option value="CO">Colombia</option>
+          <option value="JP">Japan</option>
+          <option value="KR">South Korea</option>
+          <option value="SG">Singapore</option>
+          <option value="HK">Hong Kong</option>
+          <option value="NZ">New Zealand</option>
+          <option value="AE">UAE</option>
+          <option value="SA">Saudi Arabia</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="welcome-age-verify">
+      <label class="age-checkbox-label">
+        <input type="checkbox" id="ageVerifyCheckbox">
+        <span class="custom-checkbox"></span>
+        <span class="age-text">
+          I confirm I am over 18 years of age and a qualified research professional.
+          <span>By proceeding, I agree to the Terms & Conditions and confirm all purchases are for legitimate research use only.</span>
+        </span>
+      </label>
+    </div>
+    <div class="welcome-confirm-wrap">
+      <button id="welcome-confirm" class="welcome-confirm-btn disabled">Proceed to Research Portal &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================ -->
+<!-- ANNOUNCEMENT BAR                                 -->
+<!-- ================================================ -->
+<div class="announcement-bar">
+  <div class="ann-inner">
+    <div class="ann-left">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      <span data-t="free_shipping">Free Worldwide Shipping on Orders Over</span>
+      <strong id="free-ship-amount">$150.00</strong>
+    </div>
+    <div class="ann-sep"></div>
+    <a href="track.html" class="ann-track" data-t="track_order">
+      Track Order <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- ================================================ -->
+<!-- HEADER                                           -->
+<!-- ================================================ -->
+<header class="header" id="header">
+  <div class="container header-inner">
+    <button class="mobile-menu-btn" aria-label="Toggle Menu" id="mobileMenuBtn">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="logo"><a href="index.html">Labsourced</a></div>
+    <nav class="desktop-nav">
+      <ul class="nav-links">
+        <li><a href="shop.html" data-t="shop">Shop</a></li>
+        <li><a href="shop.html" data-t="peptides">Peptides</a></li>
+        <li><a href="shop.html" data-t="stacks">Stacks</a></li>
+        <li><a href="track.html" data-t="track_order">Track Order</a></li>
+        <li><a href="pages/privacy.html" data-t="about">About</a></li>
+      </ul>
+    </nav>
+    <div class="header-icons">
+      <button aria-label="Search" class="icon-btn" id="searchBtn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <div class="lang-currency-display desktop-only" id="langCurrencyDisplay">
+        <span id="currentLang">EN</span> / <span id="currentCurrency">USD</span>
+      </div>
+      <button aria-label="Cart" class="icon-btn cart-icon-btn" id="cartBtn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span class="cart-count">0</span>
+      </button>
+    </div>
+  </div>
+  <!-- Mobile Nav -->
+  <div class="mobile-nav-overlay" id="mobileNav">
+    <button class="mobile-close-btn" id="mobileCloseBtn">✕</button>
+    <ul class="mobile-nav-links">
+      <li><a href="shop.html" data-t="shop">Shop</a></li>
+      <li><a href="shop.html" data-t="peptides">Peptides</a></li>
+      <li><a href="shop.html" data-t="stacks">Stacks</a></li>
+      <li><a href="track.html" data-t="track_order">Track Order</a></li>
+    </ul>
+  </div>
+</header>
+
+<!-- ================================================ -->
+<!-- CART DRAWER                                      -->
+<!-- ================================================ -->
+<div class="cart-overlay" id="cartOverlay"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-drawer-header">
+    <h3 data-t="cart">Cart</h3>
+    <button class="cart-close-btn" id="cartCloseBtn">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-drawer-footer" id="cartFooter" style="display:none">
+    <div class="cart-total-row">
+      <span data-t="total">Total</span>
+      <span id="cartTotal"></span>
+    </div>
+    <a href="checkout.html" class="btn btn-primary btn-full" data-t="checkout">Checkout</a>
+    <p class="cart-note">For Research Use Only</p>
+  </div>
+</div>
+
+<!-- ================================================ -->
+<!-- HERO SECTION                                     -->
+<!-- ================================================ -->
+<section class="hero">
+  <div class="hero-bg-pattern"></div>
+  <div class="container hero-inner">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <svg class="badge-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+        PREMIUM RESEARCH PEPTIDES
+      </div>
+      <h1 class="hero-heading">
+        Science<br>
+        <em>Backed</em><br>
+        Results
+      </h1>
+      <div class="hero-heading-divider"></div>
+      <p class="hero-description">
+        High-purity peptides for research, performance, recovery, and longevity. Trusted by professionals worldwide.
+      </p>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <svg class="stat-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+          <span class="stat-num">99%+</span>
+          <span class="stat-label">PURITY</span>
+        </div>
+        <div class="hero-stat">
+          <svg class="stat-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span class="stat-num">150+</span>
+          <span class="stat-label">COUNTRIES</span>
+        </div>
+        <div class="hero-stat">
+          <svg class="stat-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="stat-num">10K+</span>
+          <span class="stat-label">ORDERS</span>
+        </div>
+      </div>
+      <div class="hero-buttons">
+        <a href="shop.html" class="btn btn-primary btn-pill">Shop Peptides &nbsp;→</a>
+      </div>
+      <div class="hero-trust-text">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+        Trusted by researchers worldwide
+      </div>
+    </div>
+    <div class="hero-image-wrapper">
+      <div class="hero-glass-frame">
+        <img src="assets/images/hero-vials.png" alt="Premium Labsourced Peptide Vials" class="hero-image">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================ -->
+<!-- TRUST SECTION                                    -->
+<!-- ================================================ -->
+<section class="trust-section">
+  <div class="container trust-inner">
+    <div class="trust-item">
+      <div class="trust-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      </div>
+      <h3>Lab Tested</h3>
+      <p>HPLC verified</p>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <h3>Secure Checkout</h3>
+      <p>SSL encrypted</p>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      </div>
+      <h3>Worldwide Shipping</h3>
+      <p>150+ countries</p>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <h3>Expert Support</h3>
+      <p>24/7 available</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================ -->
+<!-- CATEGORIES SECTION                               -->
+<!-- ================================================ -->
+<section class="categories">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title" data-t="shop_by_category">Shop by Category</h2>
+      <p class="section-sub">Targeted peptide solutions for every research goal</p>
+    </div>
+    <div class="category-grid" id="categoryGrid">
+      <!-- Loaded from Supabase -->
+      <a href="shop.html?cat=performance" class="category-card">
+        <img src="assets/images/performance.png" alt="Performance Peptides" loading="lazy">
+        <div class="category-overlay"><h3>Performance Peptides</h3><span>Shop Now →</span></div>
+      </a>
+      <a href="shop.html?cat=recovery" class="category-card">
+        <img src="assets/images/recovery.png" alt="Recovery Peptides" loading="lazy">
+        <div class="category-overlay"><h3>Recovery Peptides</h3><span>Shop Now →</span></div>
+      </a>
+      <a href="shop.html?cat=longevity" class="category-card">
+        <img src="assets/images/longevity.png" alt="Longevity Peptides" loading="lazy">
+        <div class="category-overlay"><h3>Longevity Peptides</h3><span>Shop Now →</span></div>
+      </a>
+      <a href="shop.html?cat=research" class="category-card">
+        <img src="assets/images/research.png" alt="Research Peptides" loading="lazy">
+        <div class="category-overlay"><h3>Research Peptides</h3><span>Shop Now →</span></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================ -->
+<!-- FEATURED PRODUCTS SECTION                        -->
+<!-- ================================================ -->
+<section class="products">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title" data-t="featured">Featured Products</h2>
+      <p class="section-sub">Expertly curated — rigorously tested</p>
+    </div>
+    <div class="product-grid" id="featuredProductGrid">
+      <!-- Loading skeleton -->
+      <div class="product-card skeleton"></div>
+      <div class="product-card skeleton"></div>
+      <div class="product-card skeleton"></div>
+      <div class="product-card skeleton"></div>
+    </div>
+    <div class="products-cta">
+      <a href="shop.html" class="btn btn-outline">View All Peptides →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================ -->
+<!-- SCIENCE SECTION                                  -->
+<!-- ================================================ -->
+<section class="science-section">
+  <div class="container science-inner">
+    <div class="science-image-wrapper">
+      <img src="assets/images/laboratory.png" alt="Modern Biotechnology Laboratory" class="science-img" loading="lazy">
+    </div>
+    <div class="science-content">
+      <span class="eyebrow-small">Our Standards</span>
+      <h2 class="science-title">Built on Science.<br><em>Backed by Research.</em></h2>
+      <p class="science-text">
+        Premium biotechnology solutions designed with quality, precision, and innovation. Every batch undergoes rigorous evaluation to ensure absolute purity.
+      </p>
+      <ul class="science-list">
+        <li>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C8A96A" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Third-party HPLC testing on every batch
+        </li>
+        <li>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C8A96A" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Stringent ISO-standard quality control
+        </li>
+        <li>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C8A96A" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Global research compliance standards
+        </li>
+        <li>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C8A96A" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Certificate of Analysis with every order
+        </li>
+      </ul>
+      <a href="shop.html" class="btn btn-primary" style="margin-top:2rem">Explore Our Products →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================ -->
+<!-- TESTIMONIALS SECTION                             -->
+<!-- ================================================ -->
+<section class="testimonials">
+  <div class="container">
+    <div class="section-header text-center">
+      <h2 class="section-title">Trusted by Researchers</h2>
+      <p class="section-sub">What scientists and professionals say about Labsourced</p>
+    </div>
+    <div class="testimonial-grid">
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-text">"The purity and consistency of Labsourced peptides have significantly improved the reliability of our ongoing research studies. Exceptional quality."</p>
+        <p class="testimonial-author">— Dr. James M., Clinical Researcher</p>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-text">"Shipping was remarkably fast, and the packaging reflects their premium standards. BPC-157 yielded perfect analytical results."</p>
+        <p class="testimonial-author">— Sarah T., Lead Scientist</p>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-text">"As a biotechnology facility, we require absolute precision. Labsourced provides the transparency and documentation we need for compliance."</p>
+        <p class="testimonial-author">— Michael R., Lab Director</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================ -->
+<!-- NEWSLETTER SECTION                               -->
+<!-- ================================================ -->
+<section class="newsletter">
+  <div class="container newsletter-inner">
+    <div class="newsletter-text-block">
+      <h2 class="newsletter-title">Stay Connected With Labsourced</h2>
+      <p class="newsletter-text">Join our research community. Receive updates on new peptides, exclusive offers, and scientific insights.</p>
+    </div>
+    <form class="newsletter-form" id="newsletterForm" onsubmit="handleNewsletter(event)">
+      <input type="email" placeholder="Enter your email address" required class="newsletter-input" id="newsletterEmail">
+      <button type="submit" class="btn btn-primary">Subscribe</button>
+    </form>
+  </div>
+</section>
+
+<!-- ================================================ -->
+<!-- FOOTER                                           -->
+<!-- ================================================ -->
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="footer-col brand-col">
+      <h3 class="footer-logo">Labsourced</h3>
+      <p>Premium biotechnology solutions and research peptides for professionals worldwide.</p>
+      <p class="footer-research-note">For Research Use Only</p>
+    </div>
+    <div class="footer-col">
+      <h4>Shop</h4>
+      <ul>
+        <li><a href="shop.html?cat=performance">Performance</a></li>
+        <li><a href="shop.html?cat=recovery">Recovery</a></li>
+        <li><a href="shop.html?cat=longevity">Longevity</a></li>
+        <li><a href="shop.html">All Peptides</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Support</h4>
+      <ul>
+        <li><a href="track.html">Track Order</a></li>
+        <li><a href="pages/shipping.html">Shipping Policy</a></li>
+        <li><a href="pages/refund.html">Refund Policy</a></li>
+        <li><a href="pages/privacy.html">Privacy Policy</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <ul>
+        <li><a href="pages/privacy.html" data-t="privacy">Privacy Policy</a></li>
+        <li><a href="pages/terms.html" data-t="terms">Terms & Conditions</a></li>
+        <li><a href="pages/shipping.html" data-t="shipping_policy">Shipping Policy</a></li>
+        <li><a href="pages/refund.html" data-t="refund">Refund Policy</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="container">
+    <div class="footer-bottom">
+      <p>© 2026 Labsourced. All Rights Reserved. For Research Purposes Only.</p>
+      <div class="footer-bottom-links">
+        <button onclick="reopenWelcome()" class="footer-pref-btn">🌐 <span id="footerLangCurr">EN / USD</span></button>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Toast -->
+<style>
+.ls-toast { position:fixed; bottom:2rem; right:2rem; z-index:99999; transform:translateX(200%); transition:transform .35s cubic-bezier(.4,0,.2,1); }
+.ls-toast.show { transform:translateX(0); }
+.ls-toast-inner { display:flex; align-items:center; gap:.75rem; background:#06332F; color:#fff; padding:1rem 1.5rem; border-radius:12px; border-left:4px solid #C8A96A; box-shadow:0 8px 30px rgba(0,0,0,.3); font-family:'Inter',sans-serif; font-size:.9rem; }
+.ls-toast--error .ls-toast-inner { border-left-color:#e74c3c; }
+.ls-toast-icon { font-size:1.1rem; }
+</style>
+
+<script src="js/supabase.js"></script>
+<script src="js/script.js"></script>
+<script src="js/home.js"></script>
+</body>
+</html>

@@ -1,0 +1,908 @@
+// =============================================
+// LABSOURCED — ADMIN DASHBOARD JS (admin.js)
+// =============================================
+
+const SUPABASE_URL = 'https://qlqkawvxlkkqbqkhoufp.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFscWthd3Z4bGtrcWJxa2hvdWZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0OTUzOTcsImV4cCI6MjEwNjA3MTM5N30.aX5OPRxdKslk9sTVFXuYK5JWmfm_PAjq1AstQ2WMjm0';
+const ORDER_STATUSES = ['Pending','Approved','Payment Confirmed','Processing','Shipped','At Port','Out For Delivery','Delivered','Cancelled'];
+
+let adminToken = null;
+let allOrders = [], allProducts = [], allCategories = [], allReviews = [], allVariations = [];
+let editingOrderId = null;
+let pendingCatImage = null;
+let pendingProductImage = null;
+
+// =============================================
+// INIT & AUTH CHECK
+// =============================================
+document.addEventListener('DOMContentLoaded', async () => {
+  adminToken = localStorage.getItem('admin_token');
+  if (!adminToken) { window.location.href = 'login.html'; return; }
+
+  // Verify token
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}` }
+    });
+    if (!res.ok) throw new Error('Invalid token');
+    const user = await res.json();
+    const emailEl = document.getElementById('adminEmailDisplay');
+    const avatarEl = document.getElementById('adminAvatar');
+    if (emailEl) emailEl.textContent = user.email;
+    if (avatarEl) avatarEl.textContent = user.email.charAt(0).toUpperCase();
+  } catch(e) {
+    localStorage.removeItem('admin_token');
+    window.location.href = 'login.html'; return;
+  }
+
+  await loadAllData();
+});
+
+async function adminFetch(table, params = {}) {
+  let url = `${SUPABASE_URL}/rest/v1/${table}`;
+  const qp = new URLSearchParams();
+  if (params.select) qp.set('select', params.select);
+  if (params.filter) Object.entries(params.filter).forEach(([k,v]) => qp.set(k,v));
+  if (params.order) qp.set('order', params.order);
+  if (params.limit) qp.set('limit', params.limit);
+  const qs = qp.toString(); if (qs) url += '?' + qs;
+  const res = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json' }});
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function adminPost(table, data) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function adminPatch(table, data, filter) {
+  let url = `${SUPABASE_URL}/rest/v1/${table}?${new URLSearchParams(filter).toString()}`;
+  const res = await fetch(url, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function adminDelete(table, filter) {
+  let url = `${SUPABASE_URL}/rest/v1/${table}?${new URLSearchParams(filter).toString()}`;
+  const res = await fetch(url, {
+    method: 'DELETE',
+    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${adminToken}` }
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return true;
+}
+
+function adminLogout() {
+  localStorage.removeItem('admin_token');
+  localStorage.removeItem('admin_refresh');
+  localStorage.removeItem('admin_email');
+  window.location.href = 'login.html';
+}
+window.adminLogout = adminLogout;
+
+// =============================================
+// LOAD ALL DATA
+// =============================================
+async function loadAllData() {
+  try {
+    [allCategories, allProducts, allVariations, allOrders, allReviews] = await Promise.all([
+      adminFetch('categories', { select: '*', order: 'sort_order.asc' }),
+      adminFetch('products', { select: '*', order: 'sort_order.asc' }),
+      adminFetch('product_variations', { select: '*', order: 'sort_order.asc' }),
+      adminFetch('orders', { select: '*', order: 'created_at.desc' }),
+      adminFetch('reviews', { select: '*', order: 'created_at.desc' })
+    ]);
+  } catch(e) {
+    console.error('Load error:', e);
+    allCategories = []; allProducts = []; allVariations = []; allOrders = []; allReviews = [];
+  }
+
+  renderOverview();
+  renderProducts();
+  renderCategories();
+  renderOrders(allOrders);
+  renderReviews('pending');
+  renderCurrencies();
+  populateCategoryFilter();
+  populateProductCategorySelect();
+}
+
+// =============================================
+// SECTION NAVIGATION
+// =============================================
+const SECTION_TITLES = {
+  overview: 'Dashboard Overview', products: 'Products', categories: 'Categories',
+  orders: 'Orders', reviews: 'Reviews', pages: 'Pages (CMS)', currencies: 'Currency Settings'
+};
+
+function showSection(id, btn) {
+  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sn-item').forEach(i => i.classList.remove('active'));
+  const section = document.getElementById(`section-${id}`);
+  if (section) section.classList.add('active');
+  if (btn) btn.classList.add('active');
+  const titleEl = document.getElementById('topbarTitle');
+  if (titleEl) titleEl.textContent = SECTION_TITLES[id] || id;
+  return false;
+}
+window.showSection = showSection;
+
+function toggleSidebar() {
+  document.getElementById('sidebar')?.classList.toggle('open');
+}
+window.toggleSidebar = toggleSidebar;
+
+// =============================================
+// OVERVIEW
+// =============================================
+function renderOverview() {
+  const pendingOrders = allOrders.filter(o => o.status === 'Pending');
+  const activeProducts = allProducts.filter(p => p.is_active);
+  const totalRevenue = allOrders.filter(o => o.status !== 'Cancelled').reduce((s,o) => s + parseFloat(o.total_usd || 0), 0);
+  const pendingReviews = allReviews.filter(r => !r.is_approved);
+
+  document.getElementById('stat-orders').textContent = allOrders.length;
+  document.getElementById('stat-pending').textContent = pendingOrders.length;
+  document.getElementById('stat-products').textContent = activeProducts.length;
+  document.getElementById('stat-revenue').textContent = `$${totalRevenue.toFixed(2)}`;
+
+  const badge = document.getElementById('pendingBadge');
+  if (badge) { badge.textContent = pendingOrders.length; badge.style.display = pendingOrders.length > 0 ? 'block' : 'none'; }
+
+  // Recent orders
+  const recentEl = document.getElementById('recentOrdersList');
+  if (recentEl) {
+    const recent = allOrders.slice(0, 6);
+    recentEl.innerHTML = recent.length ? recent.map(o => `
+      <div class="order-row-mini">
+        <div>
+          <div class="orm-code">${o.tracking_code}</div>
+          <div class="orm-name">${o.full_name} · ${o.country}</div>
+        </div>
+        <div style="text-align:right;">
+          <span class="status-badge ${getStatusClass(o.status)}">${o.status}</span>
+          <div style="font-size:.78rem;color:#aaa;margin-top:.2rem;">$${o.total_usd}</div>
+        </div>
+      </div>`).join('') : '<div class="loading-rows">No orders yet</div>';
+  }
+
+  // Pending reviews
+  const reviewsEl = document.getElementById('pendingReviewsList');
+  if (reviewsEl) {
+    const pending = allReviews.filter(r => !r.is_approved).slice(0, 5);
+    reviewsEl.innerHTML = pending.length ? pending.map(r => `
+      <div class="order-row-mini">
+        <div>
+          <div style="font-size:.88rem;font-weight:600;color:#111;">${r.reviewer_name}</div>
+          <div style="font-size:.78rem;color:#888;">${(r.body||'').slice(0,50)}...</div>
+        </div>
+        <div style="display:flex;gap:.4rem;">
+          <button class="btn-icon success" onclick="approveReview('${r.id}')">✓ Approve</button>
+          <button class="btn-icon danger" onclick="deleteReview('${r.id}')">✕</button>
+        </div>
+      </div>`).join('') : '<div class="loading-rows">No pending reviews</div>';
+  }
+}
+
+// =============================================
+// PRODUCTS
+// =============================================
+function renderProducts() {
+  const tbody = document.getElementById('productsTableBody');
+  if (!tbody) return;
+
+  const filtered = getFilteredProducts();
+
+  tbody.innerHTML = filtered.map(p => {
+    const cat = allCategories.find(c => c.id === p.category_id);
+    const vars = allVariations.filter(v => v.product_id === p.id);
+    const img = localStorage.getItem(`admin_prod_img_${p.id}`) || (p.image_urls && p.image_urls[0]) || '../assets/images/bpc157.png';
+    return `
+      <tr>
+        <td><img src="${img}" class="prod-thumb" alt="${p.name}" onerror="this.src='../assets/images/bpc157.png'"></td>
+        <td><strong>${p.name}</strong><br><span style="font-size:.75rem;color:#aaa;">${p.slug}</span></td>
+        <td>${cat ? cat.name : '—'}</td>
+        <td>${vars.map(v => `<span style="font-size:.75rem;background:#f0f0f0;padding:.15rem .4rem;border-radius:4px;margin:.1rem;">${v.label} — $${v.price_usd}</span>`).join('')}</td>
+        <td>${p.is_featured ? '⭐' : ''} ${p.is_bestseller ? '🔥' : ''}</td>
+        <td><span class="status-badge ${p.is_active ? 'sb-active' : 'sb-hidden'}">${p.is_active ? 'Active' : 'Hidden'}</span></td>
+        <td>
+          <div class="action-btns">
+            <button class="btn-icon" onclick="editProduct('${p.id}')">✏️ Edit</button>
+            <button class="btn-icon" onclick="toggleProductVisibility('${p.id}', ${p.is_active})">${p.is_active ? '🙈 Hide' : '👁 Show'}</button>
+            <button class="btn-icon danger" onclick="deleteProduct('${p.id}')">🗑 Delete</button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('') || `<tr><td colspan="7" style="text-align:center;padding:2rem;color:#aaa;">No products found</td></tr>`;
+}
+
+function getFilteredProducts() {
+  const search = document.getElementById('productSearch')?.value.toLowerCase() || '';
+  const catFilter = document.getElementById('productCatFilter')?.value || '';
+  return allProducts.filter(p => {
+    const matchSearch = !search || p.name.toLowerCase().includes(search);
+    const matchCat = !catFilter || p.category_id === catFilter;
+    return matchSearch && matchCat;
+  });
+}
+
+function filterProductTable() { renderProducts(); }
+window.filterProductTable = filterProductTable;
+
+function populateCategoryFilter() {
+  const el = document.getElementById('productCatFilter');
+  if (!el) return;
+  el.innerHTML = `<option value="">All Categories</option>` + allCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+function populateProductCategorySelect() {
+  const el = document.getElementById('pm_category');
+  if (!el) return;
+  el.innerHTML = `<option value="">No Category</option>` + allCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+// Product Modal
+let variationRowCount = 0;
+
+function openProductModal(productId = null) {
+  document.getElementById('editProductId').value = productId || '';
+  document.getElementById('productModalTitle').textContent = productId ? 'Edit Product' : 'Add Product';
+  document.getElementById('pm_name').value = '';
+  document.getElementById('pm_slug').value = '';
+  document.getElementById('pm_category').value = '';
+  document.getElementById('pm_active').value = 'true';
+  document.getElementById('pm_short_desc').value = '';
+  document.getElementById('pm_desc').value = '';
+  document.getElementById('pm_featured').checked = false;
+  document.getElementById('pm_bestseller').checked = false;
+  document.getElementById('pm_recommended').checked = false;
+  document.getElementById('variationsContainer').innerHTML = '';
+  variationRowCount = 0;
+  pendingProductImage = null;
+
+  // Image preview
+  const imgPreview = document.getElementById('pm_image_preview');
+  const imgInput = document.getElementById('pm_image');
+  if (imgInput) imgInput.value = '';
+  if (imgPreview) {
+    const existingImg = productId ? localStorage.getItem(`admin_prod_img_${productId}`) : null;
+    imgPreview.innerHTML = existingImg
+      ? `<img src="${existingImg}" style="max-height:100px;border-radius:8px;border:1px solid #eee;">`
+      : '<span style="color:#aaa;font-size:.8rem;">No image uploaded yet</span>';
+  }
+
+  if (productId) {
+    const p = allProducts.find(x => x.id === productId);
+    if (p) {
+      document.getElementById('pm_name').value = p.name;
+      document.getElementById('pm_slug').value = p.slug;
+      document.getElementById('pm_category').value = p.category_id || '';
+      document.getElementById('pm_active').value = p.is_active ? 'true' : 'false';
+      document.getElementById('pm_short_desc').value = p.short_description || '';
+      document.getElementById('pm_desc').value = p.detailed_description || '';
+      document.getElementById('pm_featured').checked = p.is_featured;
+      document.getElementById('pm_bestseller').checked = p.is_bestseller;
+      document.getElementById('pm_recommended').checked = p.is_recommended;
+      const vars = allVariations.filter(v => v.product_id === productId);
+      vars.forEach(v => addVariationRow(v.id, v.label, v.price_usd, v.is_available));
+    }
+  } else {
+    addVariationRow();
+  }
+
+  document.getElementById('productModalOverlay').classList.add('open');
+}
+window.openProductModal = openProductModal;
+
+function addVariationRow(id = null, label = '', price = '', available = true) {
+  variationRowCount++;
+  const row = document.createElement('div');
+  row.className = 'variation-row';
+  row.id = `varrow-${variationRowCount}`;
+  row.innerHTML = `
+    <div class="form-group">
+      <label>Size / Label</label>
+      <input type="text" class="var-label" value="${label}" placeholder="5mg">
+    </div>
+    <div class="form-group">
+      <label>Price (USD)</label>
+      <input type="number" class="var-price" value="${price}" placeholder="45.00" step="0.01" min="0">
+    </div>
+    <button type="button" class="remove-var-btn" onclick="this.parentElement.remove()">✕</button>
+    <input type="hidden" class="var-id" value="${id || ''}">`;
+  document.getElementById('variationsContainer').appendChild(row);
+}
+window.addVariationRow = addVariationRow;
+
+async function saveProduct() {
+  const productId = document.getElementById('editProductId').value;
+  const name = document.getElementById('pm_name').value.trim();
+  const slug = document.getElementById('pm_slug').value.trim() || name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+  if (!name || !slug) { alert('Product name and slug are required.'); return; }
+
+  const data = {
+    name, slug,
+    category_id: document.getElementById('pm_category').value || null,
+    is_active: document.getElementById('pm_active').value === 'true',
+    short_description: document.getElementById('pm_short_desc').value,
+    detailed_description: document.getElementById('pm_desc').value,
+    is_featured: document.getElementById('pm_featured').checked,
+    is_bestseller: document.getElementById('pm_bestseller').checked,
+    is_recommended: document.getElementById('pm_recommended').checked,
+    updated_at: new Date().toISOString()
+  };
+
+  try {
+    let pid = productId;
+    if (productId) {
+      await adminPatch('products', data, { 'id': `eq.${productId}` });
+    } else {
+      const res = await adminPost('products', data);
+      pid = res[0]?.id;
+    }
+
+    if (pid) {
+      // Save pending image to localStorage
+      if (pendingProductImage) {
+        localStorage.setItem(`admin_prod_img_${pid}`, pendingProductImage);
+        pendingProductImage = null;
+      }
+      // Handle variations
+      const rows = document.querySelectorAll('.variation-row');
+      for (const row of rows) {
+        const vid = row.querySelector('.var-id').value;
+        const varLabel = row.querySelector('.var-label').value.trim();
+        const varPrice = parseFloat(row.querySelector('.var-price').value);
+        if (!varLabel || isNaN(varPrice)) continue;
+
+        if (vid) {
+          await adminPatch('product_variations', { label: varLabel, price_usd: varPrice }, { 'id': `eq.${vid}` });
+        } else {
+          await adminPost('product_variations', { product_id: pid, label: varLabel, price_usd: varPrice, is_available: true });
+        }
+      }
+    }
+
+    closeModal('productModalOverlay');
+    showToast('Product saved successfully!');
+    await loadAllData();
+  } catch(e) {
+    alert('Error saving product: ' + e.message);
+  }
+}
+window.saveProduct = saveProduct;
+
+function editProduct(id) { openProductModal(id); }
+window.editProduct = editProduct;
+
+async function toggleProductVisibility(id, currentlyActive) {
+  try {
+    await adminPatch('products', { is_active: !currentlyActive, updated_at: new Date().toISOString() }, { 'id': `eq.${id}` });
+    await loadAllData();
+    showToast(`Product ${currentlyActive ? 'hidden' : 'shown'} successfully`);
+  } catch(e) { alert('Error: ' + e.message); }
+}
+window.toggleProductVisibility = toggleProductVisibility;
+
+async function deleteProduct(id) {
+  if (!confirm('Are you sure you want to delete this product? This cannot be undone.')) return;
+  try {
+    await adminDelete('products', { 'id': `eq.${id}` });
+    await loadAllData();
+    showToast('Product deleted');
+  } catch(e) { alert('Error: ' + e.message); }
+}
+window.deleteProduct = deleteProduct;
+
+// =============================================
+// CATEGORIES
+// =============================================
+function renderCategories() {
+  const tbody = document.getElementById('categoriesTableBody');
+  if (!tbody) return;
+
+  tbody.innerHTML = allCategories.map(c => {
+    const catImg = localStorage.getItem(`admin_cat_img_${c.id}`) || (c.image_url ? `../${c.image_url}` : null);
+    return `
+    <tr>
+      <td>${catImg ? `<img src="${catImg}" class="prod-thumb" alt="${c.name}" onerror="this.style.opacity='0'">` : '<span style="font-size:1.5rem;display:block;text-align:center;">📂</span>'}</td>
+      <td><strong>${c.name}</strong></td>
+      <td><span style="font-size:.78rem;color:#aaa;">${c.slug}</span></td>
+      <td><span class="status-badge ${c.is_active ? 'sb-active' : 'sb-hidden'}">${c.is_active ? 'Active' : 'Hidden'}</span></td>
+      <td>
+        <div class="action-btns">
+          <button class="btn-icon" onclick="editCategory('${c.id}')">✏️ Edit</button>
+          <button class="btn-icon danger" onclick="deleteCategory('${c.id}')">🗑 Delete</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="5" style="text-align:center;padding:2rem;color:#aaa;">No categories found</td></tr>`;
+}
+
+function openCategoryModal(id = null) {
+  document.getElementById('editCategoryId').value = id || '';
+  document.getElementById('categoryModalTitle').textContent = id ? 'Edit Category' : 'Add Category';
+  document.getElementById('cm_name').value = '';
+  document.getElementById('cm_slug').value = '';
+  document.getElementById('cm_desc').value = '';
+  pendingCatImage = null;
+
+  // Image preview
+  const imgPreview = document.getElementById('cm_image_preview');
+  const imgInput = document.getElementById('cm_image');
+  if (imgInput) imgInput.value = '';
+  if (imgPreview) {
+    const existingImg = id ? localStorage.getItem(`admin_cat_img_${id}`) : null;
+    imgPreview.innerHTML = existingImg
+      ? `<img src="${existingImg}" style="max-height:100px;border-radius:8px;border:1px solid #eee;">`
+      : '<span style="color:#aaa;font-size:.8rem;">No image uploaded yet</span>';
+  }
+
+  if (id) {
+    const c = allCategories.find(x => x.id === id);
+    if (c) {
+      document.getElementById('cm_name').value = c.name;
+      document.getElementById('cm_slug').value = c.slug;
+      document.getElementById('cm_desc').value = c.description || '';
+    }
+  }
+  document.getElementById('categoryModalOverlay').classList.add('open');
+}
+window.openCategoryModal = openCategoryModal;
+
+async function saveCategory() {
+  const id = document.getElementById('editCategoryId').value;
+  const name = document.getElementById('cm_name').value.trim();
+  const slug = document.getElementById('cm_slug').value.trim() || name.toLowerCase().replace(/\s+/g,'-');
+  if (!name) { alert('Category name required'); return; }
+
+  const data = { name, slug, description: document.getElementById('cm_desc').value };
+  try {
+    let savedId = id;
+    if (id) {
+      await adminPatch('categories', data, { 'id': `eq.${id}` });
+    } else {
+      const res = await adminPost('categories', data);
+      savedId = res[0]?.id;
+    }
+    // Save pending category image
+    if (savedId && pendingCatImage) {
+      localStorage.setItem(`admin_cat_img_${savedId}`, pendingCatImage);
+      pendingCatImage = null;
+    }
+    closeModal('categoryModalOverlay');
+    showToast('Category saved!');
+    await loadAllData();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+window.saveCategory = saveCategory;
+
+function editCategory(id) { openCategoryModal(id); }
+window.editCategory = editCategory;
+
+async function deleteCategory(id) {
+  if (!confirm('Delete this category? This cannot be undone.')) return;
+  try {
+    await adminDelete('categories', { 'id': `eq.${id}` });
+    localStorage.removeItem(`admin_cat_img_${id}`);
+    showToast('Category deleted');
+    await loadAllData();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+window.deleteCategory = deleteCategory;
+
+// =============================================
+// ORDERS
+// =============================================
+function renderOrders(orders) {
+  const tbody = document.getElementById('ordersTableBody');
+  if (!tbody) return;
+
+  tbody.innerHTML = orders.map(o => `
+    <tr>
+      <td><strong style="font-family:'Cormorant Garamond',serif;color:#06332F;">${o.tracking_code}</strong></td>
+      <td>${o.full_name}<br><span style="font-size:.75rem;color:#aaa;">${o.email}</span></td>
+      <td>${o.country}</td>
+      <td><strong>$${parseFloat(o.total_usd).toFixed(2)}</strong></td>
+      <td>${o.payment_method}</td>
+      <td><span class="status-badge ${getStatusClass(o.status)}">${o.status}</span></td>
+      <td>${new Date(o.created_at).toLocaleDateString()}</td>
+      <td>
+        <div class="action-btns">
+          <button class="btn-icon" onclick="viewOrder('${o.id}')">👁 View</button>
+          <button class="btn-icon danger" onclick="cancelOrder('${o.id}')">✖ Cancel</button>
+          <button class="btn-icon danger" onclick="deleteOrder('${o.id}')">🗑 Delete</button>
+        </div>
+      </td>
+    </tr>`).join('') || `<tr><td colspan="8" style="text-align:center;padding:2rem;color:#aaa;">No orders found</td></tr>`;
+}
+
+function filterOrderTable() {
+  const search = document.getElementById('orderSearch')?.value.toLowerCase() || '';
+  const status = document.getElementById('orderStatusFilter')?.value || '';
+  const filtered = allOrders.filter(o => {
+    const matchSearch = !search || o.tracking_code.toLowerCase().includes(search) || o.full_name.toLowerCase().includes(search) || o.email.toLowerCase().includes(search);
+    const matchStatus = !status || o.status === status;
+    return matchSearch && matchStatus;
+  });
+  renderOrders(filtered);
+}
+window.filterOrderTable = filterOrderTable;
+
+function getStatusClass(status) {
+  const map = { 'Pending':'sb-pending','Approved':'sb-approved','Payment Confirmed':'sb-approved','Processing':'sb-processing','Shipped':'sb-shipped','At Port':'sb-shipped','Out For Delivery':'sb-shipped','Delivered':'sb-delivered','Cancelled':'sb-cancelled' };
+  return map[status] || 'sb-pending';
+}
+
+async function viewOrder(id) {
+  editingOrderId = id;
+  const order = allOrders.find(o => o.id === id);
+  if (!order) return;
+
+  let items = [];
+  try { items = await adminFetch('order_items', { select:'*', filter:{ 'order_id':`eq.${id}` } }); } catch(e) {}
+
+  const body = document.getElementById('orderModalBody');
+  document.getElementById('orderModalTitle').textContent = `Order ${order.tracking_code}`;
+
+  body.innerHTML = `
+    <div class="od-section">
+      <h4>Customer Information</h4>
+      <div class="od-row"><span>Name</span><span>${order.full_name}</span></div>
+      <div class="od-row"><span>Email</span><span>${order.email}</span></div>
+      <div class="od-row"><span>Phone</span><span>${order.phone || '—'}</span></div>
+      <div class="od-row"><span>WhatsApp</span><span>${order.whatsapp || '—'}</span></div>
+      <div class="od-row"><span>Address</span><span>${order.address}, ${order.city}, ${order.country} ${order.zip_code}</span></div>
+    </div>
+    <div class="od-section">
+      <h4>Order Details</h4>
+      <div class="od-row"><span>Payment Method</span><span>${order.payment_method}</span></div>
+      <div class="od-row"><span>Research Purpose</span><span>${order.reason_for_purchase || '—'}</span></div>
+      <div class="od-row"><span>Currency</span><span>${order.currency}</span></div>
+      <div class="od-row"><span>Total (USD)</span><span><strong>$${order.total_usd}</strong></span></div>
+      <div class="od-row"><span>Date</span><span>${new Date(order.created_at).toLocaleString()}</span></div>
+      ${order.notes ? `<div class="od-row"><span>Notes</span><span>${order.notes}</span></div>` : ''}
+    </div>
+    ${items.length ? `
+    <div class="od-section">
+      <h4>Items Ordered</h4>
+      ${items.map(i => `<div class="od-row"><span>${i.product_name} (${i.variation_label}) × ${i.quantity}</span><span>$${(i.price_usd * i.quantity).toFixed(2)}</span></div>`).join('')}
+    </div>` : ''}
+    <div class="od-section">
+      <h4>Update Order Status</h4>
+      <select class="od-status-select" id="orderStatusSelect">
+        ${ORDER_STATUSES.map(s => `<option value="${s}" ${s === order.status ? 'selected' : ''}>${s}</option>`).join('')}
+      </select>
+    </div>`;
+
+  document.getElementById('orderModalOverlay').classList.add('open');
+}
+window.viewOrder = viewOrder;
+
+async function saveOrderStatus() {
+  if (!editingOrderId) return;
+  const status = document.getElementById('orderStatusSelect')?.value;
+  try {
+    await adminPatch('orders', { status, updated_at: new Date().toISOString() }, { 'id': `eq.${editingOrderId}` });
+    closeModal('orderModalOverlay');
+    showToast(`Order status updated to "${status}"`);
+    await loadAllData();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+window.saveOrderStatus = saveOrderStatus;
+
+async function cancelOrder(id) {
+  if (!confirm('Cancel this order?')) return;
+  try {
+    await adminPatch('orders', { status: 'Cancelled', updated_at: new Date().toISOString() }, { 'id': `eq.${id}` });
+    showToast('Order cancelled');
+    await loadAllData();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+window.cancelOrder = cancelOrder;
+
+async function deleteOrder(id) {
+  if (!confirm('Permanently delete this order? This cannot be undone.')) return;
+  try {
+    // Delete order items first, then the order itself
+    try { await adminDelete('order_items', { 'order_id': `eq.${id}` }); } catch(e) {}
+    await adminDelete('orders', { 'id': `eq.${id}` });
+    showToast('Order permanently deleted');
+    await loadAllData();
+  } catch(e) { alert('Error deleting order: ' + e.message); }
+}
+window.deleteOrder = deleteOrder;
+
+function previewCatImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    pendingCatImage = e.target.result;
+    const preview = document.getElementById('cm_image_preview');
+    if (preview) preview.innerHTML = `<img src="${pendingCatImage}" style="max-height:100px;border-radius:8px;border:1px solid #eee;margin-top:.25rem;">`;
+  };
+  reader.readAsDataURL(file);
+}
+window.previewCatImage = previewCatImage;
+
+function previewProductImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    pendingProductImage = e.target.result;
+    const preview = document.getElementById('pm_image_preview');
+    if (preview) preview.innerHTML = `<img src="${pendingProductImage}" style="max-height:100px;border-radius:8px;border:1px solid #eee;margin-top:.25rem;">`;
+  };
+  reader.readAsDataURL(file);
+}
+window.previewProductImage = previewProductImage;
+
+// =============================================
+// REVIEWS
+// =============================================
+function renderReviews(filter = 'pending', btn = null) {
+  if (btn) {
+    document.querySelectorAll('.rtab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  const tbody = document.getElementById('reviewsTableBody');
+  if (!tbody) return;
+
+  let reviews = allReviews;
+  if (filter === 'pending') reviews = allReviews.filter(r => !r.is_approved);
+  else if (filter === 'approved') reviews = allReviews.filter(r => r.is_approved);
+
+  tbody.innerHTML = reviews.map(r => {
+    const prod = allProducts.find(p => p.id === r.product_id);
+    return `
+      <tr>
+        <td>${prod ? prod.name : '—'}</td>
+        <td>${r.reviewer_name}</td>
+        <td>${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</td>
+        <td style="max-width:200px;"><div style="font-weight:600;font-size:.85rem;">${r.title || ''}</div><div style="font-size:.8rem;color:#888;">${(r.body||'').slice(0,80)}...</div></td>
+        <td>${new Date(r.created_at).toLocaleDateString()}</td>
+        <td><span class="status-badge ${r.is_approved ? 'sb-approved' : 'sb-pending-review'}">${r.is_approved ? 'Approved' : 'Pending'}</span></td>
+        <td>
+          <div class="action-btns">
+            ${!r.is_approved ? `<button class="btn-icon success" onclick="approveReview('${r.id}')">✓ Approve</button>` : ''}
+            <button class="btn-icon danger" onclick="deleteReview('${r.id}')">🗑 Delete</button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('') || `<tr><td colspan="7" style="text-align:center;padding:2rem;color:#aaa;">No reviews in this category</td></tr>`;
+}
+window.loadReviews = renderReviews;
+
+async function approveReview(id) {
+  try {
+    await adminPatch('reviews', { is_approved: true }, { 'id': `eq.${id}` });
+    showToast('Review approved!');
+    await loadAllData();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+window.approveReview = approveReview;
+
+async function deleteReview(id) {
+  if (!confirm('Delete this review?')) return;
+  try {
+    await adminDelete('reviews', { 'id': `eq.${id}` });
+    showToast('Review deleted');
+    await loadAllData();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+window.deleteReview = deleteReview;
+
+// =============================================
+// PAGES (CMS) — localStorage-based
+// =============================================
+
+// Default page content sourced from the actual HTML files
+const PAGE_DEFAULTS = {
+  'privacy-policy': {
+    title: 'Privacy Policy',
+    content: `<h2>Privacy Policy</h2>
+<p>Labsourced ("we", "our", "us") is committed to protecting your personal information and your right to privacy. This Privacy Policy describes how we collect, use, disclose, and safeguard your information when you visit our website or make a purchase from us.</p>
+
+<h3>1. Information We Collect</h3>
+<p>We collect information you provide directly to us, including:</p>
+<ul>
+  <li>Personal identification information (name, email address, phone number)</li>
+  <li>Shipping and billing information (address, city, ZIP, country)</li>
+  <li>Order and purchase history</li>
+  <li>Communication preferences (language, currency)</li>
+  <li>Voluntarily provided research purpose information</li>
+</ul>
+
+<h3>2. How We Use Your Information</h3>
+<p>We use the information we collect to process and fulfill your orders, send tracking updates, improve our website, and comply with legal obligations.</p>
+
+<h3>3. Information Sharing</h3>
+<p>We do not sell, trade, or otherwise transfer your personal information to third parties without your consent.</p>
+
+<h3>4. Data Security</h3>
+<p>We implement SSL encryption and industry-standard security practices to protect your data.</p>
+
+<h3>5. Contact Us</h3>
+<p>Email: <a href="mailto:privacy@labsourced.com">privacy@labsourced.com</a></p>`
+  },
+  'terms-conditions': {
+    title: 'Terms & Conditions',
+    content: `<h2>Terms & Conditions</h2>
+<p>By accessing and using this website, you accept and agree to be bound by these Terms and Conditions.</p>
+
+<h3>1. Research Use Only</h3>
+<p>All products sold on this website are strictly for research purposes only. They are NOT intended for human or animal consumption. By purchasing, you confirm that you are a qualified researcher, 18+ years of age.</p>
+
+<h3>2. Purchases & Orders</h3>
+<p>By placing an order, you warrant that all information provided is accurate and complete. We reserve the right to refuse or cancel any order at our sole discretion.</p>
+
+<h3>3. Pricing</h3>
+<p>All prices are listed in USD. We reserve the right to change prices at any time without notice.</p>
+
+<h3>4. Limitation of Liability</h3>
+<p>Labsourced shall not be liable for any indirect, incidental, or consequential damages resulting from your use of our products.</p>
+
+<h3>5. Contact</h3>
+<p>For questions: legal@labsourced.com</p>`
+  },
+  'shipping-policy': {
+    title: 'Shipping Policy',
+    content: `<h2>Shipping Policy</h2>
+<p>Labsourced ships research peptides worldwide from our secure, climate-controlled facilities.</p>
+
+<h3>Processing Time</h3>
+<p>All orders are processed within <strong>1–3 business days</strong> after payment confirmation.</p>
+
+<h3>Shipping Options</h3>
+<ul>
+  <li>United States: 7–10 business days</li>
+  <li>Europe & UK: 8–12 business days</li>
+  <li>Canada & Australia: 10–14 business days</li>
+  <li>Africa: 12–18 business days</li>
+  <li>Asia & Middle East: 10–14 business days</li>
+</ul>
+
+<h3>Free Worldwide Shipping</h3>
+<p>We offer <strong>free worldwide shipping on all orders over $150 USD</strong>. Applied automatically at checkout.</p>
+
+<h3>Tracking</h3>
+<p>You will receive a tracking code once your order ships. Track at any time on our Track Order page.</p>
+
+<h3>Customs & Import Duties</h3>
+<p>International orders may be subject to customs fees. These charges are the sole responsibility of the customer.</p>`
+  },
+  'refund-policy': {
+    title: 'Refund Policy',
+    content: `<h2>Refund Policy</h2>
+<p>Due to the nature of our research compounds, all sales are <strong>final</strong> once an order has been processed and shipped.</p>
+
+<h3>When We Will Issue a Refund or Replacement</h3>
+<ul>
+  <li>Your order arrived visibly damaged due to shipping</li>
+  <li>You received the wrong product</li>
+  <li>Your order was provably lost in transit</li>
+  <li>A product significantly deviates from stated specifications</li>
+</ul>
+
+<h3>When Refunds Are Not Available</h3>
+<ul>
+  <li>Change of mind after order is placed</li>
+  <li>Incorrect delivery information provided by customer</li>
+  <li>Delays caused by customs or border control</li>
+  <li>Orders where the product has been opened and used</li>
+</ul>
+
+<h3>Contact</h3>
+<p>For refund inquiries: <a href="mailto:support@labsourced.com">support@labsourced.com</a></p>`
+  }
+};
+
+function getPageData(slug) {
+  const stored = localStorage.getItem(`cms_page_${slug}`);
+  if (stored) {
+    try { return JSON.parse(stored); } catch(e) {}
+  }
+  return PAGE_DEFAULTS[slug] || { title: slug, content: '' };
+}
+
+function savePageToStorage(slug, title, content) {
+  localStorage.setItem(`cms_page_${slug}`, JSON.stringify({ title, content }));
+}
+
+async function editPage(slug) {
+  const page = getPageData(slug);
+  document.getElementById('editPageSlug').value = slug;
+  document.getElementById('pm_page_title').value = page.title;
+  document.getElementById('pm_page_content').value = page.content;
+  document.getElementById('pageModalTitle').textContent = `Edit: ${page.title}`;
+  document.getElementById('pageModalOverlay').classList.add('open');
+}
+window.editPage = editPage;
+
+async function savePage() {
+  const slug = document.getElementById('editPageSlug').value;
+  const title = document.getElementById('pm_page_title').value;
+  const content = document.getElementById('pm_page_content').value;
+  savePageToStorage(slug, title, content);
+  closeModal('pageModalOverlay');
+  showToast('Page saved successfully! Changes are live.');
+}
+window.savePage = savePage;
+
+// =============================================
+// CURRENCIES
+// =============================================
+async function renderCurrencies() {
+  try {
+    const currencies = await adminFetch('currency_settings', { select:'*', order:'code.asc' });
+    const tbody = document.getElementById('currenciesTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = currencies.map(c => `
+      <tr>
+        <td><strong>${c.name}</strong></td>
+        <td>${c.code}</td>
+        <td>${c.symbol}</td>
+        <td>
+          <input type="number" class="admin-search" style="width:120px;" value="${c.rate_from_usd}" step="0.000001" min="0" id="rate-${c.code}">
+        </td>
+        <td><span class="status-badge ${c.is_active ? 'sb-active' : 'sb-hidden'}">${c.is_active ? 'Active' : 'Inactive'}</span></td>
+        <td>
+          <button class="btn-icon" onclick="updateCurrencyRate('${c.code}')">💾 Save Rate</button>
+        </td>
+      </tr>`).join('');
+  } catch(e) { console.error('Currency load error:', e); }
+}
+
+async function updateCurrencyRate(code) {
+  const rate = parseFloat(document.getElementById(`rate-${code}`)?.value);
+  if (isNaN(rate) || rate <= 0) { alert('Enter a valid rate'); return; }
+  try {
+    await adminPatch('currency_settings', { rate_from_usd: rate, updated_at: new Date().toISOString() }, { 'code': `eq.${code}` });
+    showToast(`${code} rate updated to ${rate}`);
+  } catch(e) { alert('Error: ' + e.message); }
+}
+window.updateCurrencyRate = updateCurrencyRate;
+
+// =============================================
+// MODAL HELPERS
+// =============================================
+function closeModal(overlayId) {
+  document.getElementById(overlayId)?.classList.remove('open');
+}
+window.closeModal = closeModal;
+
+// Close on backdrop click
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('modal-overlay')) {
+    e.target.classList.remove('open');
+  }
+});
+
+// =============================================
+// TOAST
+// =============================================
+function showToast(msg, type = 'success') {
+  const existing = document.querySelector('.admin-toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = 'admin-toast';
+  toast.style.cssText = `position:fixed;bottom:2rem;right:2rem;z-index:99999;background:#06332F;color:#fff;padding:1rem 1.5rem;border-radius:12px;border-left:4px solid #C8A96A;font-family:'Inter',sans-serif;font-size:.9rem;box-shadow:0 8px 30px rgba(0,0,0,.3);transform:translateX(200%);transition:transform .35s;`;
+  toast.textContent = `✓ ${msg}`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.style.transform = 'translateX(0)', 10);
+  setTimeout(() => { toast.style.transform = 'translateX(200%)'; setTimeout(() => toast.remove(), 400); }, 3500);
+}

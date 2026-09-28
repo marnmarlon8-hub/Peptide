@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy | Labsourced</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/welcome.css">
+  <style>
+    .legal-hero { background:linear-gradient(135deg,#06332F,#0B4A43); padding:4rem 0 3rem; text-align:center; }
+    .legal-hero h1 { font-family:'Cormorant Garamond',serif; font-size:clamp(2rem,4vw,3rem); font-weight:700; color:#fff; }
+    .legal-hero p { color:rgba(255,255,255,.6); font-family:'Inter',sans-serif; font-size:.85rem; margin-top:.5rem; }
+    .legal-content { max-width:780px; margin:0 auto; padding:3rem 1.5rem 5rem; font-family:'Inter',sans-serif; }
+    .legal-content h2 { font-family:'Cormorant Garamond',serif; font-size:1.8rem; color:#06332F; margin:2rem 0 .75rem; }
+    .legal-content h3 { font-family:'Cormorant Garamond',serif; font-size:1.3rem; color:#111; margin:1.5rem 0 .5rem; }
+    .legal-content p { color:#555; line-height:1.85; margin-bottom:1rem; font-size:.9rem; }
+    .legal-content ul { color:#555; line-height:1.85; padding-left:1.5rem; margin-bottom:1rem; font-size:.9rem; }
+    .legal-content li { margin-bottom:.4rem; }
+    .legal-content a { color:#06332F; }
+    .legal-updated { background:#f8f8f3; border-radius:10px; padding:.75rem 1.25rem; font-size:.78rem; color:#999; margin-bottom:2rem; }
+    .return-home-btn { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 2rem; padding: 0.6rem 1.2rem; border: 1.5px solid #06332F; border-radius: 8px; color: #06332F; text-decoration: none; font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600; transition: all 0.2s ease; }
+    .return-home-btn:hover { background: #06332F; color: #fff; }
+  </style>
+</head>
+<body>
+<header class="header" id="header">
+  <div class="container header-inner">
+    <div class="logo"><a href="../index.html">Labsourced</a></div>
+    <nav class="desktop-nav"><ul class="nav-links">
+      <li><a href="../shop.html">Shop</a></li>
+      <li><a href="../track.html">Track Order</a></li>
+    </ul></nav>
+    <div class="header-icons">
+      <button aria-label="Cart" class="icon-btn cart-icon-btn" id="cartBtn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span class="cart-count">0</span>
+      </button>
+    </div>
+  </div>
+</header>
+<div class="cart-overlay" id="cartOverlay"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-drawer-header"><h3>Cart</h3><button class="cart-close-btn" id="cartCloseBtn">✕</button></div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-drawer-footer" id="cartFooter" style="display:none">
+    <div class="cart-total-row"><span>Total</span><span id="cartTotal"></span></div>
+    <a href="../checkout.html" class="btn btn-primary btn-full">Checkout</a>
+  </div>
+</div>
+
+<div class="legal-hero">
+  <h1>Privacy Policy</h1>
+  <p>Last updated: September 2026</p>
+</div>
+
+<div class="legal-content" id="pageContent">
+  <a href="../index.html" class="return-home-btn">&larr; Return to Home</a>
+  <div class="legal-updated">📋 Last Updated: September 27, 2026</div>
+  <div id="cmsContent">
+  <h2>Privacy Policy</h2>
+  <p>Labsourced ("we", "our", "us") is committed to protecting your personal information and your right to privacy. This Privacy Policy describes how we collect, use, disclose, and safeguard your information when you visit our website or make a purchase from us.</p>
+
+  <h3>1. Information We Collect</h3>
+  <p>We collect information you provide directly to us, including:</p>
+  <ul>
+    <li>Personal identification information (name, email address, phone number)</li>
+    <li>Shipping and billing information (address, city, ZIP, country)</li>
+    <li>Order and purchase history</li>
+    <li>Communication preferences (language, currency)</li>
+    <li>Voluntarily provided research purpose information</li>
+  </ul>
+
+  <h3>2. How We Use Your Information</h3>
+  <p>We use the information we collect to:</p>
+  <ul>
+    <li>Process and fulfill your orders</li>
+    <li>Send order confirmations and tracking updates</li>
+    <li>Communicate about products, services, and promotions (with your consent)</li>
+    <li>Improve our website and customer experience</li>
+    <li>Comply with legal obligations</li>
+  </ul>
+
+  <h3>3. Information Sharing</h3>
+  <p>We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except to trusted third parties who assist us in operating our website.</p>
+
+  <h3>4. Data Security</h3>
+  <p>We implement SSL encryption and industry-standard security practices to protect your data. Our databases are hosted on Supabase.</p>
+
+  <h3>5. Cookies</h3>
+  <p>We use localStorage to store your preferences and cart contents for a better shopping experience.</p>
+
+  <h3>6. Your Rights</h3>
+  <p>You have the right to access, correct, or delete your personal data at any time. Contact us at privacy@labsourced.com.</p>
+
+  <h3>7. Contact Us</h3>
+  <p>Email: <a href="mailto:privacy@labsourced.com">privacy@labsourced.com</a></p>
+  </div>
+</div>
+<script>
+  (function() {
+    try {
+      const stored = localStorage.getItem('cms_page_privacy-policy');
+      if (stored) {
+        const data = JSON.parse(stored);
+        const el = document.getElementById('cmsContent');
+        if (el && data.content) el.innerHTML = data.content;
+      }
+    } catch(e) {}
+  })();
+</script>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="footer-col brand-col"><h3 class="footer-logo">Labsourced</h3><p>Premium research peptides for professionals.</p><p class="footer-research-note">For Research Use Only</p></div>
+    <div class="footer-col"><h4>Legal</h4><ul>
+      <li><a href="privacy.html">Privacy Policy</a></li>
+      <li><a href="terms.html">Terms & Conditions</a></li>
+      <li><a href="shipping.html">Shipping Policy</a></li>
+      <li><a href="refund.html">Refund Policy</a></li>
+    </ul></div>
+  </div>
+  <div class="container"><div class="footer-bottom"><p>© 2026 Labsourced. All Rights Reserved.</p></div></div>
+</footer>
+<script src="../js/supabase.js"></script>
+<script src="../js/script.js"></script>
+</body>
+</html>

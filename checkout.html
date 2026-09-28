@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout | Labsourced</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/welcome.css">
+  <link rel="stylesheet" href="css/checkout.css">
+</head>
+<body>
+<header class="header" id="header">
+  <div class="container header-inner">
+    <div class="logo"><a href="index.html">Labsourced</a></div>
+    <div style="display:flex;align-items:center;gap:.5rem;font-family:'Inter',sans-serif;font-size:.85rem;color:#888;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Secure Checkout
+    </div>
+  </div>
+</header>
+
+<section class="checkout-section">
+  <div class="checkout-container">
+    <!-- Steps indicator -->
+    <div class="checkout-steps" id="checkoutSteps">
+      <div class="co-step active" data-step="1"><span class="step-num">1</span><span class="step-label">Information</span></div>
+      <div class="co-step-line"></div>
+      <div class="co-step" data-step="2"><span class="step-num">2</span><span class="step-label">Purpose</span></div>
+      <div class="co-step-line"></div>
+      <div class="co-step" data-step="3"><span class="step-num">3</span><span class="step-label">Payment</span></div>
+      <div class="co-step-line"></div>
+      <div class="co-step" data-step="4"><span class="step-num">4</span><span class="step-label">Confirm</span></div>
+    </div>
+
+    <div class="checkout-layout">
+      <!-- Form Column -->
+      <div class="checkout-form-col">
+
+        <!-- STEP 1: Customer Information -->
+        <div class="checkout-step-panel active" id="step1">
+          <h2 class="checkout-step-title">Customer Information</h2>
+          <div class="co-form-grid">
+            <div class="form-group co-full"><label>Full Name *</label><input type="text" id="co_name" required placeholder="Dr. Jane Smith"></div>
+            <div class="form-group co-full"><label>Email Address *</label><input type="email" id="co_email" required placeholder="jane@research.com"></div>
+            <div class="form-group"><label>Country *</label>
+              <select id="co_country" required>
+                <option value="">Select Country...</option>
+                <option>United States</option><option>United Kingdom</option><option>Canada</option>
+                <option>Australia</option><option>Germany</option><option>France</option>
+                <option>Spain</option><option>Italy</option><option>Netherlands</option>
+                <option>Belgium</option><option>Switzerland</option><option>Sweden</option>
+                <option>Norway</option><option>Denmark</option><option>Portugal</option>
+                <option>South Africa</option><option>Nigeria</option><option>Kenya</option>
+                <option>Ghana</option><option>Brazil</option><option>Mexico</option>
+                <option>Japan</option><option>Singapore</option><option>UAE</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="form-group"><label>City *</label><input type="text" id="co_city" required placeholder="New York"></div>
+            <div class="form-group co-full"><label>Address *</label><input type="text" id="co_address" required placeholder="123 Research Blvd, Suite 400"></div>
+            <div class="form-group"><label>ZIP / Postal Code *</label><input type="text" id="co_zip" required placeholder="10001"></div>
+            <div class="form-group"><label>Phone Number *</label><input type="tel" id="co_phone" required placeholder="+1 (555) 000-0000"></div>
+            <div class="form-group co-full"><label>WhatsApp Number</label><input type="tel" id="co_whatsapp" placeholder="+1 (555) 000-0000"></div>
+          </div>
+          <div class="checkout-nav-btns">
+            <a href="shop.html" class="btn btn-outline">← Back to Shop</a>
+            <button class="btn btn-primary" onclick="goToStep(2)">Continue →</button>
+          </div>
+        </div>
+
+        <!-- STEP 2: Purchase Purpose -->
+        <div class="checkout-step-panel" id="step2">
+          <h2 class="checkout-step-title">Purpose of Purchase</h2>
+          <p class="checkout-step-desc">As a responsible research compound supplier, we require a brief statement of intended research use.</p>
+          <div class="form-group">
+            <label>Reason for Purchase *</label>
+            <div class="reason-options">
+              <label class="reason-opt"><input type="radio" name="reason" value="Academic / University Research"> Academic / University Research</label>
+              <label class="reason-opt"><input type="radio" name="reason" value="Independent Research"> Independent Research</label>
+              <label class="reason-opt"><input type="radio" name="reason" value="Clinical / Medical Research"> Clinical / Medical Research</label>
+              <label class="reason-opt"><input type="radio" name="reason" value="Pharmaceutical Development"> Pharmaceutical Development</label>
+              <label class="reason-opt"><input type="radio" name="reason" value="Personal Performance Research"> Personal Performance Research</label>
+              <label class="reason-opt"><input type="radio" name="reason" value="Other"> Other</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Additional Notes (Optional)</label>
+            <textarea id="co_notes" rows="3" placeholder="Any additional information about your research..."></textarea>
+          </div>
+          <div class="checkout-nav-btns">
+            <button class="btn btn-outline" onclick="goToStep(1)">← Back</button>
+            <button class="btn btn-primary" onclick="goToStep(3)">Continue →</button>
+          </div>
+        </div>
+
+        <!-- STEP 3: Payment Method -->
+        <div class="checkout-step-panel" id="step3">
+          <h2 class="checkout-step-title">Payment Method</h2>
+          <p class="checkout-step-desc">Select your preferred payment method. Our team will send payment instructions after your order is confirmed.</p>
+          <div class="payment-methods-grid" id="paymentMethods">
+            <label class="payment-card">
+              <input type="radio" name="payment" value="Cash App" checked>
+              <div class="payment-card-inner">
+                <span class="payment-icon">💵</span>
+                <span class="payment-name">Cash App</span>
+              </div>
+            </label>
+            <label class="payment-card">
+              <input type="radio" name="payment" value="Chime">
+              <div class="payment-card-inner">
+                <span class="payment-icon">🏦</span>
+                <span class="payment-name">Chime</span>
+              </div>
+            </label>
+            <label class="payment-card">
+              <input type="radio" name="payment" value="Gift Card">
+              <div class="payment-card-inner">
+                <span class="payment-icon">🎁</span>
+                <span class="payment-name">Gift Card</span>
+              </div>
+            </label>
+            <label class="payment-card">
+              <input type="radio" name="payment" value="Credit Card">
+              <div class="payment-card-inner">
+                <span class="payment-icon">💳</span>
+                <span class="payment-name">Credit Card</span>
+              </div>
+            </label>
+            <label class="payment-card">
+              <input type="radio" name="payment" value="Bank Transfer">
+              <div class="payment-card-inner">
+                <span class="payment-icon">🔁</span>
+                <span class="payment-name">Bank Transfer</span>
+              </div>
+            </label>
+            <label class="payment-card">
+              <input type="radio" name="payment" value="Apple Pay">
+              <div class="payment-card-inner">
+                <span class="payment-icon">🍎</span>
+                <span class="payment-name">Apple Pay</span>
+              </div>
+            </label>
+          </div>
+          <div class="checkout-nav-btns">
+            <button class="btn btn-outline" onclick="goToStep(2)">← Back</button>
+            <button class="btn btn-primary" onclick="goToStep(4)">Review Order →</button>
+          </div>
+        </div>
+
+        <!-- STEP 4: Order Confirmation -->
+        <div class="checkout-step-panel" id="step4">
+          <h2 class="checkout-step-title">Order Confirmation</h2>
+          <div id="orderSummaryReview"></div>
+          <div class="checkout-agree">
+            <label class="agree-label">
+              <input type="checkbox" id="agreeTerms">
+              I confirm these products are for research purposes only and I agree to the <a href="pages/terms.html" target="_blank">Terms & Conditions</a>.
+            </label>
+          </div>
+          <div class="checkout-nav-btns">
+            <button class="btn btn-outline" onclick="goToStep(3)">← Back</button>
+            <button class="btn btn-primary" id="placeOrderBtn" onclick="placeOrder()">🔒 Place Order</button>
+          </div>
+        </div>
+
+        <!-- STEP 5: Success -->
+        <div class="checkout-step-panel" id="step5">
+          <div class="order-success">
+            <div class="success-icon">✓</div>
+            <h2>Order Placed Successfully!</h2>
+            <p>Your research order has been received. Our team will contact you shortly with payment instructions.</p>
+            <div class="tracking-display" id="trackingDisplay"></div>
+            <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-top:2rem;">
+              <a href="track.html" class="btn btn-primary">Track My Order</a>
+              <a href="shop.html" class="btn btn-outline">Continue Shopping</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Summary Column -->
+      <aside class="checkout-summary-col">
+        <div class="checkout-summary-box">
+          <h3>Order Summary</h3>
+          <div id="summaryItems"></div>
+          <div class="summary-totals">
+            <div class="summary-row"><span>Subtotal</span><span id="summarySubtotal"></span></div>
+            <div class="summary-row"><span>Shipping</span><span class="text-gold">Free</span></div>
+            <div class="summary-row summary-total"><span>Total</span><span id="summaryTotal"></span></div>
+          </div>
+          <div class="summary-currency-note" id="summaryCurrencyNote"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<script src="js/supabase.js"></script>
+<script src="js/script.js"></script>
+<script src="js/checkout.js"></script>
+</body>
+</html>

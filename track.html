@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Track your Labsourced research peptide order using your tracking code.">
+  <title>Track Order | Labsourced</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/welcome.css">
+</head>
+<body>
+<div class="announcement-bar"><div class="container"><p>Free Worldwide Shipping on Orders Over $150</p></div></div>
+<header class="header" id="header">
+  <div class="container header-inner">
+    <button class="mobile-menu-btn" id="mobileMenuBtn"><span></span><span></span><span></span></button>
+    <div class="logo"><a href="index.html">Labsourced</a></div>
+    <nav class="desktop-nav"><ul class="nav-links">
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="track.html" class="active">Track Order</a></li>
+    </ul></nav>
+    <div class="header-icons">
+      <button aria-label="Cart" class="icon-btn cart-icon-btn" id="cartBtn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span class="cart-count">0</span>
+      </button>
+    </div>
+  </div>
+  <div class="mobile-nav-overlay" id="mobileNav">
+    <button class="mobile-close-btn" id="mobileCloseBtn">✕</button>
+    <ul class="mobile-nav-links"><li><a href="shop.html">Shop</a></li><li><a href="track.html">Track Order</a></li></ul>
+  </div>
+</header>
+<div class="cart-overlay" id="cartOverlay"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-drawer-header"><h3>Cart</h3><button class="cart-close-btn" id="cartCloseBtn">✕</button></div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-drawer-footer" id="cartFooter" style="display:none">
+    <div class="cart-total-row"><span>Total</span><span id="cartTotal"></span></div>
+    <a href="checkout.html" class="btn btn-primary btn-full">Checkout</a>
+  </div>
+</div>
+
+<section class="track-hero">
+  <div class="container">
+    <h1 class="track-title">Track Your <em>Order</em></h1>
+    <p class="track-sub">Enter your tracking code to view your order status</p>
+    <form class="track-form" id="trackForm" onsubmit="trackOrder(event)">
+      <div class="track-input-group">
+        <input type="text" id="trackingInput" class="track-input" placeholder="e.g. LS-20260012345" required>
+        <button type="submit" class="btn btn-primary track-btn">Track →</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<section class="track-result-section" id="trackResultSection" style="display:none">
+  <div class="container">
+    <div id="trackResult"></div>
+  </div>
+</section>
+
+<section style="padding:3rem 0 5rem;background:#f8f8f3;">
+  <div class="container" style="text-align:center;">
+    <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:#06332F;margin-bottom:.5rem;">Need Help?</h3>
+    <p style="font-family:'Inter',sans-serif;font-size:.9rem;color:#888;">Contact our support team via WhatsApp or email with your tracking code.</p>
+    <a href="mailto:support@labsourced.com" class="btn btn-outline" style="margin-top:1rem;display:inline-block;">support@labsourced.com</a>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="footer-col brand-col"><h3 class="footer-logo">Labsourced</h3><p>Premium research peptides for professionals.</p><p class="footer-research-note">For Research Use Only</p></div>
+  </div>
+  <div class="container"><div class="footer-bottom"><p>© 2026 Labsourced. All Rights Reserved.</p></div></div>
+</footer>
+
+<style>
+.track-hero { background: linear-gradient(135deg,#06332F 0%,#0B4A43 100%); padding:5rem 0 3rem; text-align:center; }
+.track-title { font-family:'Cormorant Garamond',serif; font-size:clamp(2.5rem,5vw,4rem); font-weight:700; color:#fff; margin-bottom:.5rem; }
+.track-title em { color:#C8A96A; font-style:italic; }
+.track-sub { color:rgba(255,255,255,.6); font-family:'Inter',sans-serif; font-size:.95rem; margin-bottom:2rem; }
+.track-form { display:flex; justify-content:center; }
+.track-input-group { display:flex; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,.2); max-width:520px; width:100%; }
+.track-input { flex:1; padding:1rem 1.25rem; border:none; outline:none; font-family:'Inter',sans-serif; font-size:1rem; color:#111; min-width:0; }
+.track-btn { border-radius:0; padding:1rem 1.5rem; white-space:nowrap; }
+
+.track-result-section { padding:3rem 0; }
+
+/* Order status card */
+.track-card { background:#fff; border-radius:20px; border:1px solid #eee; overflow:hidden; max-width:680px; margin:0 auto; }
+.track-card-header { background:linear-gradient(135deg,#06332F,#0B4A43); padding:1.75rem 2rem; }
+.tc-tracking { font-family:'Inter',sans-serif; font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.6); margin-bottom:.25rem; }
+.tc-code { font-family:'Cormorant Garamond',serif; font-size:1.8rem; font-weight:700; color:#C8A96A; }
+.tc-meta { display:flex; gap:2rem; margin-top:1rem; flex-wrap:wrap; }
+.tc-meta-item { font-family:'Inter',sans-serif; font-size:.82rem; color:rgba(255,255,255,.7); }
+.tc-meta-item strong { color:#fff; display:block; font-size:.92rem; }
+
+.track-card-body { padding:2rem; }
+.track-status-label { font-family:'Inter',sans-serif; font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#999; margin-bottom:1.25rem; }
+
+/* Timeline */
+.status-timeline { display:flex; flex-direction:column; gap:0; }
+.status-step { display:flex; gap:1rem; align-items:flex-start; }
+.status-step-icon { display:flex; flex-direction:column; align-items:center; flex-shrink:0; }
+.ss-circle { width:32px; height:32px; border-radius:50%; border:2px solid #ddd; background:#fff; display:flex; align-items:center; justify-content:center; font-size:.85rem; color:#ccc; transition:all .3s; }
+.ss-circle.done { background:#06332F; border-color:#06332F; color:#fff; }
+.ss-circle.current { background:#C8A96A; border-color:#C8A96A; color:#fff; animation:pulse 1.5s infinite; }
+.ss-line { width:2px; height:40px; background:#eee; margin:2px auto; }
+.ss-line.done { background:#06332F; }
+.status-step:last-child .ss-line { display:none; }
+.status-step-label { padding-top:.4rem; }
+.ssl-name { font-family:'Inter',sans-serif; font-size:.9rem; font-weight:600; color:#333; }
+.ssl-name.done { color:#06332F; }
+.ssl-name.current { color:#C8A96A; font-weight:700; }
+.ssl-name.pending { color:#ccc; }
+.ssl-date { font-family:'Inter',sans-serif; font-size:.75rem; color:#aaa; margin-top:.15rem; }
+
+@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(200,169,106,.4)} 50%{box-shadow:0 0 0 8px rgba(200,169,106,0)} }
+
+/* Order items in track */
+.track-items { margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid #f0f0f0; }
+.track-items h4 { font-family:'Inter',sans-serif; font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:#999; margin-bottom:1rem; }
+.track-item { display:flex; gap:.75rem; padding:.6rem 0; border-bottom:1px solid #f8f8f8; align-items:center; }
+.track-item-img { width:48px; height:48px; object-fit:contain; background:#f8f8f3; border-radius:8px; }
+.track-item-name { font-family:'Inter',sans-serif; font-size:.88rem; font-weight:600; color:#111; }
+.track-item-var { font-family:'Inter',sans-serif; font-size:.75rem; color:#999; }
+.track-item-price { margin-left:auto; font-family:'Inter',sans-serif; font-size:.88rem; font-weight:700; color:#06332F; }
+
+.track-not-found { text-align:center; padding:3rem 2rem; background:#fff; border-radius:20px; border:1px solid #eee; max-width:480px; margin:0 auto; }
+.track-not-found h3 { font-family:'Cormorant Garamond',serif; font-size:1.5rem; color:#06332F; margin-bottom:.5rem; }
+.track-not-found p { font-family:'Inter',sans-serif; font-size:.9rem; color:#888; }
+
+@media(max-width:520px) { .track-input-group { flex-direction:column; border-radius:12px; } .track-input { border-radius:12px 12px 0 0; } .track-btn { border-radius:0 0 12px 12px; } }
+</style>
+
+<script src="js/supabase.js"></script>
+<script src="js/script.js"></script>
+<script>
+const ORDER_STATUSES = ['Pending','Approved','Payment Confirmed','Processing','Shipped','At Port','Out For Delivery','Delivered'];
+
+async function trackOrder(e) {
+  e.preventDefault();
+  const code = document.getElementById('trackingInput').value.trim().toUpperCase();
+  if (!code) return;
+
+  const btn = e.target.querySelector('button');
+  btn.textContent = 'Searching...'; btn.disabled = true;
+
+  const section = document.getElementById('trackResultSection');
+  const result = document.getElementById('trackResult');
+  section.style.display = 'block';
+  result.innerHTML = `<div style="text-align:center;padding:3rem;"><div style="font-family:'Inter',sans-serif;color:#888;">Searching for order ${code}...</div></div>`;
+  section.scrollIntoView({ behavior:'smooth' });
+
+  try {
+    const orders = await db.query('orders', {
+      select: '*',
+      filter: { 'tracking_code': `eq.${code}` }
+    });
+
+    if (!orders || !orders.length) {
+      result.innerHTML = `<div class="track-not-found"><h3>Order Not Found</h3><p>No order found with tracking code <strong>${code}</strong>. Please check the code and try again.</p><p style="margin-top:1rem;">If you just placed your order, it may take a few minutes to appear.</p></div>`;
+    } else {
+      const order = orders[0];
+      let items = [];
+      try {
+        items = await db.query('order_items', { select:'*', filter:{ 'order_id':`eq.${order.id}` } });
+      } catch(e) {}
+      renderTrackResult(order, items);
+    }
+  } catch(err) {
+    result.innerHTML = `<div class="track-not-found"><h3>Connection Error</h3><p>Unable to connect. Please try again in a moment.</p></div>`;
+  }
+
+  btn.textContent = 'Track →'; btn.disabled = false;
+}
+window.trackOrder = trackOrder;
+
+function renderTrackResult(order, items) {
+  const result = document.getElementById('trackResult');
+  const currentStatusIdx = ORDER_STATUSES.indexOf(order.status);
+  const isCancelled = order.status === 'Cancelled';
+
+  const orderDate = new Date(order.created_at).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+
+  const timelineHTML = ORDER_STATUSES.map((status, idx) => {
+    let circleClass = 'pending';
+    let lineClass = '';
+    let icon = idx + 1;
+    if (idx < currentStatusIdx) { circleClass = 'done'; lineClass = 'done'; icon = '✓'; }
+    else if (idx === currentStatusIdx && !isCancelled) { circleClass = 'current'; icon = '●'; }
+
+    return `
+      <div class="status-step">
+        <div class="status-step-icon">
+          <div class="ss-circle ${circleClass}">${icon}</div>
+          <div class="ss-line ${lineClass}"></div>
+        </div>
+        <div class="status-step-label">
+          <div class="ssl-name ${circleClass}">${status}</div>
+          ${idx <= currentStatusIdx && !isCancelled ? `<div class="ssl-date">${idx === currentStatusIdx ? 'Current status' : 'Completed'}</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  const itemsHTML = items.length ? `
+    <div class="track-items">
+      <h4>Items</h4>
+      ${items.map(item => `
+        <div class="track-item">
+          <img class="track-item-img" src="${item.image_url||'assets/images/bpc157.png'}" alt="${item.product_name}" onerror="this.src='assets/images/bpc157.png'">
+          <div>
+            <div class="track-item-name">${item.product_name}</div>
+            <div class="track-item-var">${item.variation_label} × ${item.quantity}</div>
+          </div>
+          <div class="track-item-price">$${(item.price_usd * item.quantity).toFixed(2)}</div>
+        </div>`).join('')}
+    </div>` : '';
+
+  result.innerHTML = `
+    <div class="track-card">
+      <div class="track-card-header">
+        <div class="tc-tracking">Tracking Code</div>
+        <div class="tc-code">${order.tracking_code}</div>
+        <div class="tc-meta">
+          <div class="tc-meta-item"><strong>${order.status}</strong>Status</div>
+          <div class="tc-meta-item"><strong>${orderDate}</strong>Order Date</div>
+          <div class="tc-meta-item"><strong>$${order.total_usd}</strong>Total</div>
+        </div>
+      </div>
+      <div class="track-card-body">
+        <div class="track-status-label">Order Timeline</div>
+        ${isCancelled ? `<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:1rem 1.25rem;font-family:'Inter',sans-serif;font-size:.9rem;color:#dc2626;margin-bottom:1.5rem;">This order has been cancelled. Please contact support for assistance.</div>` : ''}
+        <div class="status-timeline">${timelineHTML}</div>
+        ${itemsHTML}
+      </div>
+    </div>`;
+}
+
+// Auto-fill from localStorage
+document.addEventListener('DOMContentLoaded', () => {
+  const lastTracking = LS.get('last_tracking');
+  if (lastTracking) {
+    const input = document.getElementById('trackingInput');
+    if (input) input.value = lastTracking;
+  }
+});
+</script>
+</body>
+</html>

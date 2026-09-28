@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shipping Policy | Labsourced</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/welcome.css">
+  <style>
+    .legal-hero{background:linear-gradient(135deg,#06332F,#0B4A43);padding:4rem 0 3rem;text-align:center}
+    .legal-hero h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,4vw,3rem);font-weight:700;color:#fff}
+    .legal-hero p{color:rgba(255,255,255,.6);font-family:'Inter',sans-serif;font-size:.85rem;margin-top:.5rem}
+    .legal-content{max-width:780px;margin:0 auto;padding:3rem 1.5rem 5rem;font-family:'Inter',sans-serif}
+    .legal-content h2{font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:#06332F;margin:2rem 0 .75rem}
+    .legal-content h3{font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:#111;margin:1.5rem 0 .5rem}
+    .legal-content p{color:#555;line-height:1.85;margin-bottom:1rem;font-size:.9rem}
+    .legal-content ul{color:#555;line-height:1.85;padding-left:1.5rem;margin-bottom:1rem;font-size:.9rem}
+    .legal-content li{margin-bottom:.4rem}
+    .legal-updated{background:#f8f8f3;border-radius:10px;padding:.75rem 1.25rem;font-size:.78rem;color:#999;margin-bottom:2rem}
+    .shipping-table{width:100%;border-collapse:collapse;margin:1rem 0}
+    .shipping-table th{background:#06332F;color:#fff;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:600;padding:.75rem 1rem;text-align:left}
+    .shipping-table td{padding:.75rem 1rem;border-bottom:1px solid #f0f0f0;font-family:'Inter',sans-serif;font-size:.88rem;color:#555}
+    .shipping-table tr:nth-child(even) td{background:#f8f8f3}
+    .free-badge{background:#C8A96A;color:#fff;padding:.2rem .6rem;border-radius:20px;font-size:.75rem;font-weight:700}
+    .return-home-btn { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 2rem; padding: 0.6rem 1.2rem; border: 1.5px solid #06332F; border-radius: 8px; color: #06332F; text-decoration: none; font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600; transition: all 0.2s ease; }
+    .return-home-btn:hover { background: #06332F; color: #fff; }
+  </style>
+</head>
+<body>
+<header class="header" id="header">
+  <div class="container header-inner">
+    <div class="logo"><a href="../index.html">Labsourced</a></div>
+    <nav class="desktop-nav"><ul class="nav-links"><li><a href="../shop.html">Shop</a></li><li><a href="../track.html">Track Order</a></li></ul></nav>
+    <div class="header-icons">
+      <button aria-label="Cart" class="icon-btn cart-icon-btn" id="cartBtn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span class="cart-count">0</span>
+      </button>
+    </div>
+  </div>
+</header>
+<div class="cart-overlay" id="cartOverlay"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-drawer-header"><h3>Cart</h3><button class="cart-close-btn" id="cartCloseBtn">✕</button></div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-drawer-footer" id="cartFooter" style="display:none">
+    <div class="cart-total-row"><span>Total</span><span id="cartTotal"></span></div>
+    <a href="../checkout.html" class="btn btn-primary btn-full">Checkout</a>
+  </div>
+</div>
+
+<div class="legal-hero">
+  <h1>Shipping Policy</h1>
+  <p>Worldwide delivery to 150+ countries</p>
+</div>
+
+<div class="legal-content">
+  <a href="../index.html" class="return-home-btn">&larr; Return to Home</a>
+  <div class="legal-updated">📋 Last Updated: September 27, 2026</div>
+  <div id="cmsContent">
+  <h2>Shipping Policy</h2>
+  <p>Labsourced ships research peptides worldwide from our secure, climate-controlled facilities. We are committed to safe, discreet, and timely delivery of all orders.</p>
+
+  <h3>Processing Time</h3>
+  <p>All orders are processed within <strong>1–3 business days</strong> after payment confirmation. Orders placed on weekends or holidays are processed on the next business day.</p>
+
+  <h3>Shipping Options</h3>
+  <table class="shipping-table">
+    <tr><th>Region</th><th>Method</th><th>Estimated Time</th><th>Cost</th></tr>
+    <tr><td>United States</td><td>Standard International</td><td>7–10 business days</td><td><span class="free-badge">FREE over $150</span></td></tr>
+    <tr><td>Europe</td><td>Standard International</td><td>8–12 business days</td><td><span class="free-badge">FREE over $150</span></td></tr>
+    <tr><td>UK & Ireland</td><td>Standard International</td><td>7–10 business days</td><td><span class="free-badge">FREE over $150</span></td></tr>
+    <tr><td>Canada & Australia</td><td>Standard International</td><td>10–14 business days</td><td><span class="free-badge">FREE over $150</span></td></tr>
+    <tr><td>Africa</td><td>Standard International</td><td>12–18 business days</td><td><span class="free-badge">FREE over $150</span></td></tr>
+    <tr><td>Asia & Middle East</td><td>Standard International</td><td>10–14 business days</td><td><span class="free-badge">FREE over $150</span></td></tr>
+    <tr><td>Rest of World</td><td>Standard International</td><td>14–21 business days</td><td><span class="free-badge">FREE over $150</span></td></tr>
+  </table>
+
+  <h3>Free Worldwide Shipping</h3>
+  <p>We offer <strong>free worldwide shipping on all orders over $150 USD</strong>. This applies automatically at checkout — no coupon code needed.</p>
+
+  <h3>Packaging</h3>
+  <p>All orders are shipped in discreet, unmarked packaging with no indication of contents on the exterior. Products are shipped in temperature-appropriate packaging to maintain compound integrity.</p>
+
+  <h3>Tracking</h3>
+  <p>Once your order ships, you will receive your tracking code. You can track your order at any time on our <a href="../track.html">Track Order</a> page using your unique tracking code (format: LS-YYYYXXXXX).</p>
+
+  <h3>Customs & Import Duties</h3>
+  <p>International orders may be subject to customs fees, import duties, or taxes imposed by the destination country. These charges are the sole responsibility of the customer. Labsourced is not responsible for delays caused by customs processing.</p>
+
+  <h3>Lost or Damaged Packages</h3>
+  <p>If your package is lost or arrives damaged, please contact us within 48 hours at shipping@labsourced.com with your tracking code and photos of any damage. We will work to resolve the issue promptly.</p>
+  </div>
+</div>
+<script>
+  (function() {
+    try {
+      const stored = localStorage.getItem('cms_page_shipping-policy');
+      if (stored) {
+        const data = JSON.parse(stored);
+        const el = document.getElementById('cmsContent');
+        if (el && data.content) el.innerHTML = data.content;
+      }
+    } catch(e) {}
+  })();
+</script>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="footer-col brand-col"><h3 class="footer-logo">Labsourced</h3><p>Premium research peptides.</p><p class="footer-research-note">For Research Use Only</p></div>
+    <div class="footer-col"><h4>Legal</h4><ul>
+      <li><a href="privacy.html">Privacy Policy</a></li><li><a href="terms.html">Terms & Conditions</a></li>
+      <li><a href="shipping.html">Shipping Policy</a></li><li><a href="refund.html">Refund Policy</a></li>
+    </ul></div>
+  </div>
+  <div class="container"><div class="footer-bottom"><p>© 2026 Labsourced. All Rights Reserved.</p></div></div>
+</footer>
+<script src="../js/supabase.js"></script>
+<script src="../js/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Labsourced Shop — Browse all premium research peptides. Performance, recovery, longevity, and research compounds.">
+  <title>Shop | Labsourced</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/welcome.css">
+  <link rel="stylesheet" href="css/shop.css">
+</head>
+<body>
+<!-- Announcement -->
+<div class="announcement-bar">
+  <div class="container">
+    <p><span data-t="free_shipping">Free Worldwide Shipping on Orders Over</span> <span id="free-ship-amount">$150</span> &nbsp;|&nbsp; <a href="track.html" style="color:inherit;text-decoration:underline;" data-t="track_order">Track Order</a></p>
+  </div>
+</div>
+
+<!-- Header -->
+<header class="header" id="header">
+  <div class="container header-inner">
+    <button class="mobile-menu-btn" aria-label="Toggle Menu" id="mobileMenuBtn"><span></span><span></span><span></span></button>
+    <div class="logo"><a href="index.html">Labsourced</a></div>
+    <nav class="desktop-nav">
+      <ul class="nav-links">
+        <li><a href="shop.html" class="active" data-t="shop">Shop</a></li>
+        <li><a href="shop.html" data-t="peptides">Peptides</a></li>
+        <li><a href="shop.html" data-t="stacks">Stacks</a></li>
+        <li><a href="track.html" data-t="track_order">Track Order</a></li>
+        <li><a href="pages/privacy.html" data-t="about">About</a></li>
+      </ul>
+    </nav>
+    <div class="header-icons">
+      <div class="lang-currency-display desktop-only" id="langCurrencyDisplay">
+        <span id="currentLang">EN</span> / <span id="currentCurrency">USD</span>
+      </div>
+      <button aria-label="Cart" class="icon-btn cart-icon-btn" id="cartBtn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span class="cart-count">0</span>
+      </button>
+    </div>
+  </div>
+  <div class="mobile-nav-overlay" id="mobileNav">
+    <button class="mobile-close-btn" id="mobileCloseBtn">✕</button>
+    <ul class="mobile-nav-links">
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="track.html">Track Order</a></li>
+    </ul>
+  </div>
+</header>
+
+<!-- Cart Drawer -->
+<div class="cart-overlay" id="cartOverlay"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-drawer-header"><h3 data-t="cart">Cart</h3><button class="cart-close-btn" id="cartCloseBtn">✕</button></div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-drawer-footer" id="cartFooter" style="display:none">
+    <div class="cart-total-row"><span data-t="total">Total</span><span id="cartTotal"></span></div>
+    <a href="checkout.html" class="btn btn-primary btn-full" data-t="checkout">Checkout</a>
+    <p class="cart-note">For Research Use Only</p>
+  </div>
+</div>
+
+<!-- Shop Hero -->
+<section class="shop-hero">
+  <div class="container">
+    <h1 class="shop-hero-title">Our <em>Peptides</em></h1>
+    <p class="shop-hero-sub">Premium, lab-verified research compounds</p>
+  </div>
+</section>
+
+<!-- Shop Layout -->
+<section class="shop-section">
+  <div class="container">
+    <div class="shop-layout">
+      <!-- Sidebar -->
+      <aside class="shop-sidebar">
+        <div class="sidebar-block">
+          <h4>Categories</h4>
+          <ul class="cat-filter-list" id="catFilterList">
+            <li><button class="cat-filter-btn active" data-cat="">All Peptides</button></li>
+            <li><button class="cat-filter-btn" data-cat="performance">Performance</button></li>
+            <li><button class="cat-filter-btn" data-cat="recovery">Recovery</button></li>
+            <li><button class="cat-filter-btn" data-cat="longevity">Longevity</button></li>
+            <li><button class="cat-filter-btn" data-cat="research">Research</button></li>
+          </ul>
+        </div>
+        <div class="sidebar-block">
+          <h4>Sort By</h4>
+          <select id="sortSelect" class="shop-select">
+            <option value="sort_order.asc">Featured</option>
+            <option value="name.asc">Name A-Z</option>
+            <option value="name.desc">Name Z-A</option>
+          </select>
+        </div>
+      </aside>
+      <!-- Products -->
+      <main class="shop-main">
+        <div class="shop-toolbar">
+          <p class="shop-count" id="shopCount">Loading products...</p>
+          <div class="shop-search-wrap">
+            <input type="search" id="shopSearch" placeholder="Search peptides..." class="shop-search-input">
+          </div>
+        </div>
+        <div class="product-grid" id="shopProductGrid">
+          <div class="product-card skeleton"></div>
+          <div class="product-card skeleton"></div>
+          <div class="product-card skeleton"></div>
+          <div class="product-card skeleton"></div>
+          <div class="product-card skeleton"></div>
+          <div class="product-card skeleton"></div>
+        </div>
+      </main>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="footer-col brand-col">
+      <h3 class="footer-logo">Labsourced</h3>
+      <p>Premium biotechnology solutions and research peptides for professionals worldwide.</p>
+      <p class="footer-research-note">For Research Use Only</p>
+    </div>
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <ul>
+        <li><a href="pages/privacy.html">Privacy Policy</a></li>
+        <li><a href="pages/terms.html">Terms & Conditions</a></li>
+        <li><a href="pages/shipping.html">Shipping Policy</a></li>
+        <li><a href="pages/refund.html">Refund Policy</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="container"><div class="footer-bottom"><p>© 2026 Labsourced. All Rights Reserved.</p></div></div>
+</footer>
+
+<script src="js/supabase.js"></script>
+<script src="js/script.js"></script>
+<script src="js/shop.js"></script>
+</body>
+</html>

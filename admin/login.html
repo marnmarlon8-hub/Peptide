@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login | Labsourced</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{min-height:100vh;background:linear-gradient(135deg,#06332F 0%,#0B4A43 50%,#06332F 100%);display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif}
+    .login-card{background:#fff;border-radius:24px;padding:3rem 2.5rem;width:420px;max-width:94vw;box-shadow:0 40px 80px rgba(0,0,0,.3)}
+    .login-logo{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;color:#06332F;text-align:center;margin-bottom:.3rem}
+    .login-sub{text-align:center;font-size:.78rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#C8A96A;margin-bottom:2.5rem}
+    .form-group{margin-bottom:1.25rem}
+    .form-group label{display:block;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#666;margin-bottom:.5rem}
+    .form-group input{width:100%;padding:.85rem 1.1rem;border:1.5px solid #e0e0e0;border-radius:10px;font-family:'Inter',sans-serif;font-size:.95rem;color:#111;outline:none;transition:border-color .2s}
+    .form-group input:focus{border-color:#06332F;box-shadow:0 0 0 3px rgba(6,51,47,.08)}
+    .login-btn{width:100%;padding:1rem;background:linear-gradient(135deg,#06332F,#0B4A43);color:#fff;border:none;border-radius:12px;font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:600;letter-spacing:.04em;cursor:pointer;transition:all .3s;margin-top:.5rem}
+    .login-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(6,51,47,.4)}
+    .login-btn:disabled{opacity:.7;cursor:not-allowed;transform:none}
+    .login-error{background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;padding:.75rem 1rem;border-radius:8px;font-size:.85rem;margin-bottom:1rem;display:none}
+    .back-link{display:block;text-align:center;margin-top:1.5rem;font-size:.82rem;color:#999;text-decoration:none}
+    .back-link:hover{color:#06332F}
+    .security-note{text-align:center;font-size:.72rem;color:#aaa;margin-top:1rem;display:flex;align-items:center;justify-content:center;gap:.4rem}
+  </style>
+</head>
+<body>
+<div class="login-card">
+  <div class="login-logo">Labsourced</div>
+  <div class="login-sub">Admin Dashboard</div>
+  <div class="login-error" id="loginError"></div>
+  <form id="loginForm" onsubmit="handleLogin(event)">
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="adminEmail" value="admin@labsourced.com" required autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="adminPassword" required placeholder="Enter password" autocomplete="current-password">
+    </div>
+    <button type="submit" class="login-btn" id="loginBtn">Sign In to Dashboard</button>
+  </form>
+  <a href="../index.html" class="back-link">← Back to Website</a>
+  <div class="security-note">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    Secured by Supabase Authentication
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://qlqkawvxlkkqbqkhoufp.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFscWthd3Z4bGtrcWJxa2hvdWZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0OTUzOTcsImV4cCI6MjEwNjA3MTM5N30.aX5OPRxdKslk9sTVFXuYK5JWmfm_PAjq1AstQ2WMjm0';
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('loginBtn');
+  const errorEl = document.getElementById('loginError');
+  const email = document.getElementById('adminEmail').value;
+  const password = document.getElementById('adminPassword').value;
+
+  btn.textContent = 'Signing in...'; btn.disabled = true;
+  errorEl.style.display = 'none';
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error_description || data.message || 'Invalid credentials');
+
+    // Check if admin
+    const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${data.access_token}` }
+    });
+    const user = await userRes.json();
+
+    // Store session
+    localStorage.setItem('admin_token', data.access_token);
+    localStorage.setItem('admin_refresh', data.refresh_token);
+    localStorage.setItem('admin_email', user.email);
+    localStorage.setItem('admin_user_id', user.id);
+
+    window.location.href = 'dashboard.html';
+  } catch(err) {
+    errorEl.textContent = err.message;
+    errorEl.style.display = 'block';
+    btn.textContent = 'Sign In to Dashboard'; btn.disabled = false;
+  }
+}
+
+// Check if already logged in
+if (localStorage.getItem('admin_token')) {
+  window.location.href = 'dashboard.html';
+}
+</script>
+</body>
+</html>

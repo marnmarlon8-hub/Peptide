@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | Labsourced</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <span class="sb-logo">Labsourced</span>
+    <span class="sb-label">Admin</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="#" class="sn-item active" data-section="overview" onclick="showSection('overview',this)">
+      <span class="sn-icon">📊</span><span>Overview</span>
+    </a>
+    <a href="#" class="sn-item" data-section="products" onclick="showSection('products',this)">
+      <span class="sn-icon">🧪</span><span>Products</span>
+    </a>
+    <a href="#" class="sn-item" data-section="categories" onclick="showSection('categories',this)">
+      <span class="sn-icon">📂</span><span>Categories</span>
+    </a>
+    <a href="#" class="sn-item" data-section="orders" onclick="showSection('orders',this)">
+      <span class="sn-icon">📦</span><span>Orders</span>
+      <span class="sn-badge" id="pendingBadge">0</span>
+    </a>
+    <a href="#" class="sn-item" data-section="reviews" onclick="showSection('reviews',this)">
+      <span class="sn-icon">⭐</span><span>Reviews</span>
+    </a>
+    <a href="#" class="sn-item" data-section="pages" onclick="showSection('pages',this)">
+      <span class="sn-icon">📄</span><span>Pages (CMS)</span>
+    </a>
+    <a href="#" class="sn-item" data-section="currencies" onclick="showSection('currencies',this)">
+      <span class="sn-icon">💱</span><span>Currencies</span>
+    </a>
+    <div class="sn-divider"></div>
+    <a href="../index.html" class="sn-item" target="_blank">
+      <span class="sn-icon">🌐</span><span>View Website</span>
+    </a>
+    <a href="#" class="sn-item sn-logout" onclick="adminLogout()">
+      <span class="sn-icon">🚪</span><span>Sign Out</span>
+    </a>
+  </nav>
+</aside>
+
+<!-- Main Content -->
+<div class="admin-main" id="adminMain">
+  <!-- Top Bar -->
+  <div class="admin-topbar">
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+    <div class="topbar-title" id="topbarTitle">Dashboard Overview</div>
+    <div class="topbar-user">
+      <span class="tu-email" id="adminEmailDisplay"></span>
+      <div class="tu-avatar" id="adminAvatar">A</div>
+    </div>
+  </div>
+
+  <!-- ===================== OVERVIEW SECTION ===================== -->
+  <section class="admin-section active" id="section-overview">
+    <div class="section-header"><h2>Dashboard Overview</h2></div>
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <div class="sc-icon">📦</div>
+        <div class="sc-info"><div class="sc-value" id="stat-orders">—</div><div class="sc-label">Total Orders</div></div>
+      </div>
+      <div class="stat-card sc-gold">
+        <div class="sc-icon">⏳</div>
+        <div class="sc-info"><div class="sc-value" id="stat-pending">—</div><div class="sc-label">Pending Orders</div></div>
+      </div>
+      <div class="stat-card sc-green">
+        <div class="sc-icon">🧪</div>
+        <div class="sc-info"><div class="sc-value" id="stat-products">—</div><div class="sc-label">Active Products</div></div>
+      </div>
+      <div class="stat-card sc-blue">
+        <div class="sc-icon">💰</div>
+        <div class="sc-info"><div class="sc-value" id="stat-revenue">—</div><div class="sc-label">Total Revenue (USD)</div></div>
+      </div>
+    </div>
+
+    <div class="overview-grid">
+      <div class="admin-card">
+        <div class="card-header"><h3>Recent Orders</h3><button class="link-btn" onclick="showSection('orders',null)">View All →</button></div>
+        <div id="recentOrdersList"><div class="loading-rows"></div></div>
+      </div>
+      <div class="admin-card">
+        <div class="card-header"><h3>Pending Reviews</h3><button class="link-btn" onclick="showSection('reviews',null)">View All →</button></div>
+        <div id="pendingReviewsList"><div class="loading-rows"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PRODUCTS SECTION ===================== -->
+  <section class="admin-section" id="section-products">
+    <div class="section-header">
+      <h2>Products</h2>
+      <button class="btn-admin-primary" onclick="openProductModal()">+ Add Product</button>
+    </div>
+    <div class="admin-card">
+      <div class="table-toolbar">
+        <input type="search" class="admin-search" placeholder="Search products..." id="productSearch" oninput="filterProductTable()">
+        <select class="admin-select" id="productCatFilter" onchange="filterProductTable()">
+          <option value="">All Categories</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table class="admin-table" id="productsTable">
+          <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Variations</th><th>Featured</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="productsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CATEGORIES SECTION ===================== -->
+  <section class="admin-section" id="section-categories">
+    <div class="section-header">
+      <h2>Categories</h2>
+      <button class="btn-admin-primary" onclick="openCategoryModal()">+ Add Category</button>
+    </div>
+    <div class="admin-card">
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Image</th><th>Name</th><th>Slug</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="categoriesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== ORDERS SECTION ===================== -->
+  <section class="admin-section" id="section-orders">
+    <div class="section-header"><h2>Orders</h2></div>
+    <div class="admin-card">
+      <div class="table-toolbar">
+        <input type="search" class="admin-search" placeholder="Search by tracking code, name..." id="orderSearch" oninput="filterOrderTable()">
+        <select class="admin-select" id="orderStatusFilter" onchange="filterOrderTable()">
+          <option value="">All Statuses</option>
+          <option>Pending</option><option>Approved</option><option>Payment Confirmed</option>
+          <option>Processing</option><option>Shipped</option><option>At Port</option>
+          <option>Out For Delivery</option><option>Delivered</option><option>Cancelled</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Tracking</th><th>Customer</th><th>Country</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="ordersTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== REVIEWS SECTION ===================== -->
+  <section class="admin-section" id="section-reviews">
+    <div class="section-header"><h2>Reviews</h2></div>
+    <div class="review-tabs">
+      <button class="rtab active" onclick="loadReviews('pending',this)">Pending Approval</button>
+      <button class="rtab" onclick="loadReviews('approved',this)">Approved</button>
+      <button class="rtab" onclick="loadReviews('all',this)">All Reviews</button>
+    </div>
+    <div class="admin-card">
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Product</th><th>Reviewer</th><th>Rating</th><th>Review</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="reviewsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PAGES CMS SECTION ===================== -->
+  <section class="admin-section" id="section-pages">
+    <div class="section-header"><h2>Website Pages (CMS)</h2></div>
+    <div class="pages-grid" id="pagesGrid">
+      <div class="page-card" onclick="editPage('privacy-policy')">
+        <div class="pc-icon">🔒</div>
+        <div class="pc-title">Privacy Policy</div>
+        <div class="pc-action">Edit Content →</div>
+      </div>
+      <div class="page-card" onclick="editPage('terms-conditions')">
+        <div class="pc-icon">📋</div>
+        <div class="pc-title">Terms & Conditions</div>
+        <div class="pc-action">Edit Content →</div>
+      </div>
+      <div class="page-card" onclick="editPage('shipping-policy')">
+        <div class="pc-icon">🚚</div>
+        <div class="pc-title">Shipping Policy</div>
+        <div class="pc-action">Edit Content →</div>
+      </div>
+      <div class="page-card" onclick="editPage('refund-policy')">
+        <div class="pc-icon">↩️</div>
+        <div class="pc-title">Refund Policy</div>
+        <div class="pc-action">Edit Content →</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CURRENCIES SECTION ===================== -->
+  <section class="admin-section" id="section-currencies">
+    <div class="section-header"><h2>Currency Settings</h2></div>
+    <div class="admin-card">
+      <p style="font-family:'Inter',sans-serif;font-size:.88rem;color:#888;margin-bottom:1.5rem;">Update exchange rates relative to USD. Changes apply immediately to all product prices shown to customers.</p>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Currency</th><th>Code</th><th>Symbol</th><th>Rate (vs USD)</th><th>Active</th><th>Actions</th></tr></thead>
+          <tbody id="currenciesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ===================== MODALS ===================== -->
+
+<!-- Product Modal -->
+<div class="modal-overlay" id="productModalOverlay">
+  <div class="modal-box modal-lg" id="productModal">
+    <div class="modal-header">
+      <h3 id="productModalTitle">Add Product</h3>
+      <button class="modal-close" onclick="closeModal('productModalOverlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editProductId">
+      <div class="modal-form-grid">
+        <div class="form-group"><label>Product Name *</label><input type="text" id="pm_name" placeholder="BPC-157"></div>
+        <div class="form-group"><label>Slug *</label><input type="text" id="pm_slug" placeholder="bpc-157"></div>
+        <div class="form-group"><label>Category</label>
+          <select id="pm_category"><option value="">No Category</option></select>
+        </div>
+        <div class="form-group"><label>Status</label>
+          <select id="pm_active"><option value="true">Active (Visible)</option><option value="false">Hidden</option></select>
+        </div>
+        <div class="form-group mfg-full"><label>Short Description</label><input type="text" id="pm_short_desc" placeholder="Brief product description..."></div>
+        <div class="form-group mfg-full"><label>Detailed Description</label><textarea id="pm_desc" rows="4" placeholder="Full product description..."></textarea></div>
+        <div class="form-group mfg-full">
+          <label>Product Image (Upload from Device)</label>
+          <input type="file" id="pm_image" accept="image/*" style="display:block;width:100%;padding:.55rem;border:1.5px dashed #ddd;border-radius:8px;background:#fafafa;font-family:'Inter',sans-serif;font-size:.85rem;cursor:pointer;" onchange="previewProductImage(event)">
+          <div id="pm_image_preview" style="margin-top:.75rem;"></div>
+        </div>
+      </div>
+      <div class="pm-flags">
+        <label class="flag-toggle"><input type="checkbox" id="pm_featured"><span>⭐ Featured</span></label>
+        <label class="flag-toggle"><input type="checkbox" id="pm_bestseller"><span>🔥 Best Seller</span></label>
+        <label class="flag-toggle"><input type="checkbox" id="pm_recommended"><span>💡 Recommended</span></label>
+      </div>
+
+      <div class="variations-section">
+        <div class="vs-header">
+          <h4>Product Variations (Sizes & Prices)</h4>
+          <button type="button" class="btn-sm-outline" onclick="addVariationRow()">+ Add Variation</button>
+        </div>
+        <div id="variationsContainer"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-admin-outline" onclick="closeModal('productModalOverlay')">Cancel</button>
+      <button class="btn-admin-primary" onclick="saveProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- Category Modal -->
+<div class="modal-overlay" id="categoryModalOverlay">
+  <div class="modal-box" id="categoryModal">
+    <div class="modal-header">
+      <h3 id="categoryModalTitle">Add Category</h3>
+      <button class="modal-close" onclick="closeModal('categoryModalOverlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editCategoryId">
+      <div class="form-group"><label>Category Name *</label><input type="text" id="cm_name" placeholder="Performance"></div>
+      <div class="form-group"><label>Slug *</label><input type="text" id="cm_slug" placeholder="performance"></div>
+      <div class="form-group"><label>Description</label><textarea id="cm_desc" rows="3" placeholder="Category description..."></textarea></div>
+      <div class="form-group">
+        <label>Category Image</label>
+        <input type="file" id="cm_image" accept="image/*" style="display:block;width:100%;padding:.55rem;border:1.5px dashed #ddd;border-radius:8px;background:#fafafa;font-family:'Inter',sans-serif;font-size:.85rem;cursor:pointer;" onchange="previewCatImage(event)">
+        <div id="cm_image_preview" style="margin-top:.75rem;"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-admin-outline" onclick="closeModal('categoryModalOverlay')">Cancel</button>
+      <button class="btn-admin-primary" onclick="saveCategory()">Save Category</button>
+    </div>
+  </div>
+</div>
+
+<!-- Order Detail Modal -->
+<div class="modal-overlay" id="orderModalOverlay">
+  <div class="modal-box modal-lg" id="orderModal">
+    <div class="modal-header">
+      <h3 id="orderModalTitle">Order Details</h3>
+      <button class="modal-close" onclick="closeModal('orderModalOverlay')">✕</button>
+    </div>
+    <div class="modal-body" id="orderModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn-admin-outline" onclick="closeModal('orderModalOverlay')">Close</button>
+      <button class="btn-admin-primary" onclick="saveOrderStatus()">Update Status</button>
+    </div>
+  </div>
+</div>
+
+<!-- Page CMS Modal -->
+<div class="modal-overlay" id="pageModalOverlay">
+  <div class="modal-box modal-xl">
+    <div class="modal-header">
+      <h3 id="pageModalTitle">Edit Page</h3>
+      <button class="modal-close" onclick="closeModal('pageModalOverlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editPageSlug">
+      <div class="form-group"><label>Page Title</label><input type="text" id="pm_page_title"></div>
+      <div class="form-group"><label>Content (HTML)</label><textarea id="pm_page_content" rows="18" style="font-family:monospace;font-size:.82rem;"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-admin-outline" onclick="closeModal('pageModalOverlay')">Cancel</button>
+      <button class="btn-admin-primary" onclick="savePage()">Save Page</button>
+    </div>
+  </div>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>
