@@ -126,6 +126,7 @@ async function pushLocalToSupabase() {
   const tables = ['categories', 'products', 'product_variations'];
   let totalPushed = 0;
   let totalFailed = 0;
+  let failReasons = [];
   const btn = document.querySelector('#syncBanner button');
   if (btn) { btn.textContent = '⏳ Syncing...'; btn.disabled = true; }
 
@@ -136,7 +137,11 @@ async function pushLocalToSupabase() {
     const successIds = [];
     for (const item of localItems) {
       try {
-        // Try to upsert (insert or update) each local item to Supabase
+        // Strip internal tracking flags before sending to Supabase
+        const cleanItem = { ...item };
+        delete cleanItem._local_only;
+
+        // Try POST (upsert with merge-duplicates handles both insert and update)
         const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
           method: 'POST',
           headers: {
@@ -145,18 +150,41 @@ async function pushLocalToSupabase() {
             'Content-Type': 'application/json',
             'Prefer': 'resolution=merge-duplicates,return=representation'
           },
-          body: JSON.stringify(item)
+          body: JSON.stringify(cleanItem)
         });
+
         if (res.ok) {
           successIds.push(item.id);
           totalPushed++;
         } else {
-          totalFailed++;
-          const err = await res.text();
-          console.warn(`Failed to push ${table} item ${item.id}:`, err);
+          const errText = await res.text();
+          console.warn(`POST failed for ${table}/${item.id}:`, errText, '— trying PATCH...');
+
+          // Fallback: try PATCH in case it's a duplicate key issue
+          const patchRes = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${item.id}`, {
+            method: 'PATCH',
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${adminToken}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=representation'
+            },
+            body: JSON.stringify(cleanItem)
+          });
+
+          if (patchRes.ok) {
+            successIds.push(item.id);
+            totalPushed++;
+          } else {
+            totalFailed++;
+            const patchErr = await patchRes.text();
+            failReasons.push(`${table}: ${patchErr.substring(0, 120)}`);
+            console.warn(`PATCH also failed for ${table}/${item.id}:`, patchErr);
+          }
         }
       } catch(e) {
         totalFailed++;
+        failReasons.push(`${table}: ${e.message}`);
         console.warn(`Exception pushing ${table}:`, e);
       }
     }
@@ -173,17 +201,23 @@ async function pushLocalToSupabase() {
   }
 
   if (totalFailed > 0 && totalPushed === 0) {
-    // Nothing got through — RLS is still blocking
-    showToast(`Sync failed. Database permissions still blocked. Please run the RLS fix SQL first.`, 'error');
+    showToast('Sync failed — database still blocking. Check console for details.', 'error');
+    console.error('Sync failures:', failReasons);
+    if (btn) { btn.textContent = '🔄 Sync to Cloud Now'; btn.disabled = false; }
     showRlsFixModal();
   } else if (totalPushed > 0 && totalFailed === 0) {
-    showToast(`✅ ${totalPushed} item(s) successfully synced to cloud! Now visible on all devices.`);
+    showToast(`✅ ${totalPushed} item(s) synced to cloud! Now visible on all devices.`);
     document.getElementById('syncBanner')?.remove();
     setSyncStatus(true);
     await loadAllData();
-  } else if (totalPushed > 0) {
-    showToast(`Partially synced: ${totalPushed} succeeded, ${totalFailed} failed. Check RLS settings.`, 'info');
+  } else if (totalPushed > 0 && totalFailed > 0) {
+    showToast(`Partially synced: ${totalPushed} succeeded, ${totalFailed} failed.`, 'info');
+    if (btn) { btn.textContent = '🔄 Retry Sync'; btn.disabled = false; }
     await loadAllData();
+  } else {
+    // Nothing to sync — clear the banner
+    document.getElementById('syncBanner')?.remove();
+    setSyncStatus(true);
   }
 }
 window.pushLocalToSupabase = pushLocalToSupabase;
@@ -1665,46 +1699,75 @@ function showRlsFixModal() {
         <div style="background:#1a1a1a;padding:1.5rem;border-radius:12px;position:relative;">
           <button onclick="navigator.clipboard.writeText(document.getElementById('sqlFixCode').innerText); this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy',2000)" style="position:absolute;top:10px;right:10px;background:#C8A96A;color:black;border:none;padding:0.4rem 0.8rem;border-radius:6px;cursor:pointer;font-weight:bold;font-size:0.8rem;">Copy</button>
           <pre id="sqlFixCode" style="color:#00ffcc;font-family:monospace;font-size:0.85rem;overflow-x:auto;margin:0;white-space:pre-wrap;">
--- 1. Enable RLS on core tables
+-- ============================================================
+-- LABSOURCED — COMPLETE RLS FIX (Safe to run multiple times)
+-- Run this in Supabase Dashboard → SQL Editor → Run
+-- ============================================================
+
+-- STEP 1: Enable RLS on all tables
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.product_variations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 
--- 2. Clean old conflicting policies
+-- STEP 2: Drop ALL existing policies (safe — IF EXISTS prevents errors)
 DROP POLICY IF EXISTS "Public Read Products" ON public.products;
 DROP POLICY IF EXISTS "Admin All Products" ON public.products;
+DROP POLICY IF EXISTS "Enable insert for products" ON public.products;
+DROP POLICY IF EXISTS "Enable update for products" ON public.products;
+DROP POLICY IF EXISTS "Enable delete for products" ON public.products;
 DROP POLICY IF EXISTS "Public Read Categories" ON public.categories;
 DROP POLICY IF EXISTS "Admin All Categories" ON public.categories;
+DROP POLICY IF EXISTS "Enable insert for categories" ON public.categories;
+DROP POLICY IF EXISTS "Enable update for categories" ON public.categories;
+DROP POLICY IF EXISTS "Enable delete for categories" ON public.categories;
 DROP POLICY IF EXISTS "Public Read Variations" ON public.product_variations;
 DROP POLICY IF EXISTS "Admin All Variations" ON public.product_variations;
+DROP POLICY IF EXISTS "Enable insert for product_variations" ON public.product_variations;
+DROP POLICY IF EXISTS "Enable update for product_variations" ON public.product_variations;
+DROP POLICY IF EXISTS "Enable delete for product_variations" ON public.product_variations;
+DROP POLICY IF EXISTS "Public Insert Orders" ON public.orders;
 DROP POLICY IF EXISTS "Admin All Orders" ON public.orders;
+DROP POLICY IF EXISTS "Public Insert Order Items" ON public.order_items;
+DROP POLICY IF EXISTS "Admin All Order Items" ON public.order_items;
+DROP POLICY IF EXISTS "Public Insert Reviews" ON public.reviews;
+DROP POLICY IF EXISTS "Public Read Reviews" ON public.reviews;
+DROP POLICY IF EXISTS "Admin All Reviews" ON public.reviews;
+DROP POLICY IF EXISTS "Enable insert for reviews" ON public.reviews;
+DROP POLICY IF EXISTS "Enable update for reviews" ON public.reviews;
+DROP POLICY IF EXISTS "Enable delete for reviews" ON public.reviews;
 
--- 3. Public Read Access
+-- STEP 3: Public READ access (all visitors can see products)
 CREATE POLICY "Public Read Products" ON public.products FOR SELECT USING (true);
 CREATE POLICY "Public Read Categories" ON public.categories FOR SELECT USING (true);
 CREATE POLICY "Public Read Variations" ON public.product_variations FOR SELECT USING (true);
+CREATE POLICY "Public Read Reviews" ON public.reviews FOR SELECT USING (is_approved = true);
 
--- 4. Public Write Access (for orders/reviews)
+-- STEP 4: Public WRITE access (customers can place orders & submit reviews)
 CREATE POLICY "Public Insert Orders" ON public.orders FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public Insert Order Items" ON public.order_items FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public Insert Reviews" ON public.reviews FOR INSERT WITH CHECK (true);
 
--- 5. Admin Full Access
+-- STEP 5: Admin FULL access (all dashboard operations work on all devices)
 CREATE POLICY "Admin All Products" ON public.products FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Admin All Categories" ON public.categories FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Admin All Variations" ON public.product_variations FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Admin All Orders" ON public.orders FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Admin All Order Items" ON public.order_items FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Admin All Reviews" ON public.reviews FOR ALL USING (auth.role() = 'authenticated');
 
--- 6. Storage Permissions
+-- STEP 6: Storage bucket for product images
 INSERT INTO storage.buckets (id, name, public) VALUES ('product-images', 'product-images', true) ON CONFLICT DO NOTHING;
 DROP POLICY IF EXISTS "Public Read Images" ON storage.objects;
 DROP POLICY IF EXISTS "Admin Insert Images" ON storage.objects;
 DROP POLICY IF EXISTS "Admin Update Images" ON storage.objects;
+DROP POLICY IF EXISTS "Admin Delete Images" ON storage.objects;
 CREATE POLICY "Public Read Images" ON storage.objects FOR SELECT USING (bucket_id = 'product-images');
 CREATE POLICY "Admin Insert Images" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'product-images' AND auth.role() = 'authenticated');
 CREATE POLICY "Admin Update Images" ON storage.objects FOR UPDATE USING (bucket_id = 'product-images' AND auth.role() = 'authenticated');
+CREATE POLICY "Admin Delete Images" ON storage.objects FOR DELETE USING (bucket_id = 'product-images' AND auth.role() = 'authenticated');
           </pre>
         </div>
       </div>
