@@ -280,12 +280,9 @@ async function sendInvoiceEmail(order, items) {
   `;
 
   try {
-    const p1 = 're_7mhBZK7K';
-    const p2 = '_ELTwovkqTLz6M7S4i6pj2bfG';
-    await fetch('https://api.resend.com/emails', {
+    await fetch('/api/send-email', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${p1}${p2}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
