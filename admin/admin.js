@@ -342,9 +342,6 @@ function populateProductCategorySelect() {
 
 // Product Modal
 let variationRowCount = 0;
-
-// Product Modal
-let variationRowCount = 0;
 let currentProductCoas = [];
 
 function fileToDataURL(file) {

@@ -33,8 +33,13 @@ const db = {
       console.warn('Supabase fetch warning:', e);
     }
 
-    // Merge with custom items from localStorage
-    const localItems = LS.get('custom_' + table) || [];
+    // Merge with custom items saved by admin (uses 'ls_custom_' prefix to match admin.js)
+    let localItems = [];
+    try {
+      const stored = localStorage.getItem('ls_custom_' + table);
+      if (stored) localItems = JSON.parse(stored) || [];
+    } catch(e) {}
+
     if (localItems.length > 0) {
       const map = new Map();
       (dbData || []).forEach(item => map.set(item.id, item));
