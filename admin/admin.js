@@ -82,6 +82,22 @@ async function adminDelete(table, filter) {
   return true;
 }
 
+async function uploadFileToStorage(bucket, path, file) {
+  // Try PUT (upsert) first — works even if the file exists
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`, {
+    method: 'PUT',
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${adminToken}`,
+      'Content-Type': file.type || 'application/octet-stream',
+      'x-upsert': 'true'
+    },
+    body: file
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`;
+}
+
 function adminLogout() {
   localStorage.removeItem('admin_token');
   localStorage.removeItem('admin_refresh');
@@ -139,6 +155,7 @@ window.showSection = showSection;
 
 function toggleSidebar() {
   document.getElementById('sidebar')?.classList.toggle('open');
+  document.getElementById('sidebarBackdrop')?.classList.toggle('open');
 }
 window.toggleSidebar = toggleSidebar;
 
@@ -281,6 +298,9 @@ function openProductModal(productId = null) {
       : '<span style="color:#aaa;font-size:.8rem;">No image uploaded yet</span>';
   }
 
+  const coaPreview = document.getElementById('pm_coa_existing');
+  if (coaPreview) coaPreview.innerHTML = '';
+
   if (productId) {
     const p = allProducts.find(x => x.id === productId);
     if (p) {
@@ -293,6 +313,11 @@ function openProductModal(productId = null) {
       document.getElementById('pm_featured').checked = p.is_featured;
       document.getElementById('pm_bestseller').checked = p.is_bestseller;
       document.getElementById('pm_recommended').checked = p.is_recommended;
+      
+      if (p.coa_urls && p.coa_urls.length > 0 && coaPreview) {
+        coaPreview.innerHTML = `<strong>Existing COAs:</strong><br>` + p.coa_urls.map((url, i) => `<a href="${url}" target="_blank" style="color:var(--gold);text-decoration:underline;">COA Document ${i+1}</a>`).join('<br>');
+      }
+
       const vars = allVariations.filter(v => v.product_id === productId);
       vars.forEach(v => addVariationRow(v.id, v.label, v.price_usd, v.is_available));
     }
@@ -353,11 +378,48 @@ async function saveProduct() {
     }
 
     if (pid) {
-      // Save pending image to localStorage
-      if (pendingProductImage) {
+      // Upload product image to Supabase Storage
+      const imgInput = document.getElementById('pm_image');
+      if (imgInput && imgInput.files && imgInput.files[0]) {
+        const file = imgInput.files[0];
+        const ext = file.name.split('.').pop();
+        const path = `products/${pid}.${ext}`;
+        try {
+          const imgUrl = await uploadFileToStorage('product-images', path, file);
+          await adminPatch('products', { image_urls: [imgUrl], updated_at: new Date().toISOString() }, { 'id': `eq.${pid}` });
+          // Also update local preview cache
+          localStorage.setItem(`admin_prod_img_${pid}`, imgUrl);
+        } catch(imgErr) {
+          console.warn('Image upload failed, saving to localStorage:', imgErr);
+          if (pendingProductImage) {
+            localStorage.setItem(`admin_prod_img_${pid}`, pendingProductImage);
+          }
+        }
+      } else if (pendingProductImage) {
         localStorage.setItem(`admin_prod_img_${pid}`, pendingProductImage);
-        pendingProductImage = null;
       }
+      pendingProductImage = null;
+
+      // Handle COA uploads
+      const coaInput = document.getElementById('pm_coa');
+      if (coaInput && coaInput.files && coaInput.files.length > 0) {
+        const existingCoas = (allProducts.find(p => p.id === pid)?.coa_urls) || [];
+        const newCoas = [...existingCoas];
+        for (const file of Array.from(coaInput.files)) {
+          const ext = file.name.split('.').pop();
+          const coaPath = `coa/${pid}/${Date.now()}_${file.name}`;
+          try {
+            const coaUrl = await uploadFileToStorage('product-images', coaPath, file);
+            newCoas.push(coaUrl);
+          } catch(coaErr) {
+            console.warn('COA upload failed:', coaErr);
+          }
+        }
+        if (newCoas.length > 0) {
+          await adminPatch('products', { coa_urls: newCoas, updated_at: new Date().toISOString() }, { 'id': `eq.${pid}` });
+        }
+      }
+
       // Handle variations
       const rows = document.querySelectorAll('.variation-row');
       for (const row of rows) {

@@ -55,6 +55,9 @@
   </nav>
 </aside>
 
+<!-- Sidebar backdrop (mobile) -->
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+
 <!-- Main Content -->
 <div class="admin-main" id="adminMain">
   <!-- Top Bar -->
@@ -261,6 +264,15 @@
           <button type="button" class="btn-sm-outline" onclick="addVariationRow()">+ Add Variation</button>
         </div>
         <div id="variationsContainer"></div>
+      </div>
+
+      <div class="variations-section" style="margin-top:1.5rem;">
+        <div class="vs-header">
+          <h4>📋 COA Documents (Certificate of Analysis)</h4>
+          <span style="font-size:.78rem;color:#888;">Upload one or more COA files (PDF or image). Multiple files allowed.</span>
+        </div>
+        <input type="file" id="pm_coa" accept=".pdf,image/*" multiple style="display:block;width:100%;padding:.55rem;border:1.5px dashed #ddd;border-radius:8px;background:#fafafa;font-family:'Inter',sans-serif;font-size:.85rem;cursor:pointer;">
+        <div id="pm_coa_existing" style="margin-top:.75rem;font-size:.8rem;color:#555;"></div>
       </div>
     </div>
     <div class="modal-footer">
