@@ -141,7 +141,7 @@
 /* Payment cards */
 .payment-methods-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: .75rem;
   margin-bottom: 1.5rem;
 }
@@ -167,6 +167,13 @@
   box-shadow: 0 4px 16px rgba(6,51,47,.1);
 }
 .payment-icon { font-size: 1.8rem; }
+.payment-icon-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  margin-bottom: 0.25rem;
+  border-radius: 4px;
+}
 .payment-name {
   font-family: 'Inter', sans-serif;
   font-size: .82rem; font-weight: 600;
