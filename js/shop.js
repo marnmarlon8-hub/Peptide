@@ -14,35 +14,39 @@ const STATIC_PRODUCTS = [
 let allProducts = [];
 let allVariations = {};
 let currentCat = '';
+let allCategories = [];
 
 async function loadShopProducts() {
   const urlParams = new URLSearchParams(window.location.search);
   currentCat = urlParams.get('cat') || '';
 
-  // Highlight active category filter
-  if (currentCat) {
-    document.querySelectorAll('.cat-filter-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.cat === currentCat);
-    });
-  }
-
   try {
-    const filter = { 'is_active': 'eq.true' };
+    // 1. Load categories from Supabase and build dynamic sidebar
+    const categories = await db.query('categories', {
+      select: 'id,name,slug',
+      filter: { 'is_active': 'eq.true' },
+      order: 'sort_order.asc'
+    });
+    allCategories = categories || [];
+    buildCategoryFilterSidebar(allCategories);
+
+    // 2. Load products
     const products = await db.query('products', {
       select: 'id,name,slug,image_urls,short_description,is_featured,is_bestseller,category_id',
-      filter,
+      filter: { 'is_active': 'eq.true' },
       order: 'sort_order.asc'
     });
 
+    // 3. Load variations
     const variations = await db.query('product_variations', {
       select: 'id,product_id,label,price_usd',
       filter: { 'is_available': 'eq.true' },
       order: 'sort_order.asc'
     });
 
-    const categories = await db.query('categories', { select: 'id,slug', filter: { 'is_active': 'eq.true' } });
+    // Build category lookup: id => slug
     const catMap = {};
-    categories.forEach(c => catMap[c.id] = c.slug);
+    allCategories.forEach(c => catMap[c.id] = c.slug);
 
     allProducts = products.map(p => ({
       ...p,
@@ -55,9 +59,47 @@ async function loadShopProducts() {
   } catch(e) {
     console.warn('Using static fallback:', e);
     allProducts = STATIC_PRODUCTS;
+    buildCategoryFilterSidebar([]); // keep static buttons if fallback
   }
 
   filterAndRender();
+}
+
+function buildCategoryFilterSidebar(categories) {
+  const listEl = document.getElementById('catFilterList');
+  if (!listEl) return;
+
+  // Always start with "All" button
+  let html = `<li><button class="cat-filter-btn${!currentCat ? ' active' : ''}" data-cat="">All Peptides</button></li>`;
+
+  if (categories && categories.length > 0) {
+    html += categories.map(c => `
+      <li><button class="cat-filter-btn${currentCat === c.slug ? ' active' : ''}" data-cat="${c.slug}">${c.name}</button></li>
+    `).join('');
+  } else {
+    // Static fallback buttons if Supabase is unavailable
+    const staticCats = [
+      { slug: 'performance', name: 'Performance' },
+      { slug: 'recovery', name: 'Recovery' },
+      { slug: 'longevity', name: 'Longevity' },
+      { slug: 'research', name: 'Research' }
+    ];
+    html += staticCats.map(c => `
+      <li><button class="cat-filter-btn${currentCat === c.slug ? ' active' : ''}" data-cat="${c.slug}">${c.name}</button></li>
+    `).join('');
+  }
+
+  listEl.innerHTML = html;
+
+  // Re-attach click listeners to newly created buttons
+  listEl.querySelectorAll('.cat-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      listEl.querySelectorAll('.cat-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentCat = btn.dataset.cat;
+      filterAndRender();
+    });
+  });
 }
 
 function filterAndRender() {
@@ -174,14 +216,8 @@ window.addToCartShop = addToCartShop;
 document.addEventListener('DOMContentLoaded', () => {
   loadShopProducts();
 
-  document.querySelectorAll('.cat-filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.cat-filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentCat = btn.dataset.cat;
-      filterAndRender();
-    });
-  });
+  // Note: category filter button listeners are attached dynamically in buildCategoryFilterSidebar()
+  // after categories load from Supabase, so we don't bind them here.
 
   document.getElementById('sortSelect')?.addEventListener('change', filterAndRender);
 
