@@ -262,22 +262,41 @@
       </tbody>
     </table>
 
-    <div class="totals">
-      <div class="totals-box">
-        <div class="totals-row">
-          <span>Subtotal</span>
-          <span id="invSubtotal"></span>
+        <div class="totals">
+          <div class="totals-box">
+            <div class="totals-row">
+              <span>Subtotal</span>
+              <span id="invSubtotal"></span>
+            </div>
+            <div class="totals-row" id="invPromoRow" style="display:none;color:#C8A96A;">
+              <span id="invPromoLabel">Promo Discount</span>
+              <span id="invPromoAmt"></span>
+            </div>
+            <div class="totals-row">
+              <span>Shipping</span>
+              <span id="invShipping">$35.00</span>
+            </div>
+            <div class="totals-row grand-total">
+              <span>Total USD</span>
+              <span id="invTotal"></span>
+            </div>
+          </div>
         </div>
-        <div class="totals-row">
-          <span>Shipping</span>
-          <span>$0.00</span>
+
+        <!-- Payment Instructions Notice -->
+        <div id="invPaymentNotice" style="background:linear-gradient(135deg,#06332F 0%,#0b4a43 100%);border-radius:10px;padding:24px 28px;margin-bottom:40px;">
+          <h3 style="margin:0 0 12px 0;font-size:16px;color:#C8A96A;font-family:'Cormorant Garamond',serif;">&#9889; Payment Instructions</h3>
+          <p style="margin:0 0 14px 0;font-size:14px;line-height:1.7;color:rgba(255,255,255,0.9);font-family:'Inter',sans-serif;">
+            To complete your order, please send your full payment via your selected payment method, then confirm by texting or messaging us at:
+          </p>
+          <div style="background:rgba(200,169,106,0.12);border:1.5px solid rgba(200,169,106,0.4);border-radius:8px;padding:14px;text-align:center;margin-bottom:14px;">
+            <p style="margin:0 0 4px 0;font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.15em;font-family:'Inter',sans-serif;">Text or Message Us to Confirm Payment</p>
+            <p style="margin:0;font-size:24px;font-weight:700;color:#C8A96A;letter-spacing:2px;font-family:'Inter',sans-serif;">(661) 293-7097</p>
+          </div>
+          <p style="margin:0;font-size:12.5px;color:rgba(255,255,255,0.6);line-height:1.7;font-family:'Inter',sans-serif;">
+            &#128274; <em>Please include your order tracking number in your message for secure, swift processing. Your order will be dispatched within 24&#8211;48 hours of payment confirmation. All transactions are handled with complete discretion.</em>
+          </p>
         </div>
-        <div class="totals-row grand-total">
-          <span>Total USD</span>
-          <span id="invTotal"></span>
-        </div>
-      </div>
-    </div>
 
     <div class="footer">
       <div>
@@ -349,9 +368,30 @@
           </tr>
         `).join('');
 
-        document.getElementById('invSubtotal').textContent = '$' + order.subtotal_usd.toFixed(2);
-        document.getElementById('invTotal').textContent = '$' + order.total_usd.toFixed(2);
+        document.getElementById('invSubtotal').textContent = '$' + parseFloat(order.subtotal_usd).toFixed(2);
 
+        // Show promo if applicable
+        if (order.promo_code && order.promo_discount_amount) {
+          const promoRow = document.getElementById('invPromoRow');
+          const promoLabel = document.getElementById('invPromoLabel');
+          const promoAmt = document.getElementById('invPromoAmt');
+          if (promoRow) promoRow.style.display = '';
+          if (promoLabel) promoLabel.textContent = `Promo (${order.promo_code} — ${order.promo_discount_percent}% off)`;
+          if (promoAmt) promoAmt.textContent = `-$${parseFloat(order.promo_discount_amount).toFixed(2)}`;
+        }
+
+        // Shipping
+        const shippingAmt = order.shipping_usd || 35;
+        const shippingEl = document.getElementById('invShipping');
+        if (shippingEl) shippingEl.textContent = '$' + parseFloat(shippingAmt).toFixed(2);
+
+        document.getElementById('invTotal').textContent = '$' + parseFloat(order.total_usd).toFixed(2);
+
+        // Update payment notice with tracking
+        const trackingEl = document.querySelector('#invPaymentNotice em');
+        if (trackingEl && order.tracking_code) {
+          trackingEl.innerHTML = `Please include your order tracking number <strong style="color:#C8A96A;">${order.tracking_code}</strong> in your message for secure, swift processing. Your order will be dispatched within 24&#8211;48 hours of payment confirmation. All transactions are handled with complete discretion.`;
+        }
         document.getElementById('invQr').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${order.tracking_code}`;
 
         document.getElementById('invoiceWrapper').style.display = 'block';

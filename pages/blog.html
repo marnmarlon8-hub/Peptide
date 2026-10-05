@@ -1,36 +1,385 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Research Blog | Labsourced</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Research insights, peptide science, and lab intelligence from the Labsourced scientific team.">
+  <title>Research Insights | Labsourced</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/welcome.css">
   <style>
-    .legal-hero { background:linear-gradient(135deg,#06332F,#0B4A43); padding:4rem 0 3rem; text-align:center; }
-    .legal-hero h1 { font-family:'Cormorant Garamond',serif; font-size:clamp(2rem,4vw,3rem); font-weight:700; color:#fff; }
-    .legal-hero p { color:rgba(255,255,255,.6); font-family:'Inter',sans-serif; font-size:.85rem; margin-top:.5rem; }
-    .legal-content { max-width:780px; margin:0 auto; padding:3rem 1.5rem 5rem; font-family:'Inter',sans-serif; }
-    .return-home-btn { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 2rem; padding: 0.6rem 1.2rem; border: 1.5px solid #06332F; border-radius: 8px; color: #06332F; text-decoration: none; font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600; transition: all 0.2s ease; }
+    /* ── BLOG PAGE HERO ── */
+    .blog-hero {
+      background: linear-gradient(135deg, #041f1c 0%, #06332F 50%, #0b4a43 100%);
+      padding: 5.5rem 0 4rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .blog-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(200,169,106,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 30%, rgba(200,169,106,0.05) 0%, transparent 55%);
+      pointer-events: none;
+    }
+    .blog-hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: rgba(200,169,106,0.12);
+      border: 1px solid rgba(200,169,106,0.25);
+      color: #C8A96A;
+      font-family: 'Inter', sans-serif;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      padding: .4rem 1.1rem;
+      border-radius: 50px;
+      margin-bottom: 1.5rem;
+    }
+    .blog-hero h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+    .blog-hero h1 em { font-style: italic; color: #C8A96A; }
+    .blog-hero p {
+      color: rgba(255,255,255,.65);
+      font-family: 'Inter', sans-serif;
+      font-size: .95rem;
+      max-width: 520px;
+      margin: 0 auto 2rem;
+      line-height: 1.65;
+    }
+
+    /* ── FILTER BAR ── */
+    .blog-filter-bar {
+      background: #fff;
+      border-bottom: 1px solid #eee;
+      padding: 1.1rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 2px 12px rgba(0,0,0,.05);
+    }
+    .blog-filter-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .blog-search-wrap {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+    .blog-search-wrap svg {
+      position: absolute;
+      left: .9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #aaa;
+      pointer-events: none;
+    }
+    #blogSearch {
+      width: 100%;
+      padding: .65rem 1rem .65rem 2.5rem;
+      border: 1.5px solid #E5E7EB;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: .88rem;
+      outline: none;
+      transition: border-color .2s;
+      background: #FAFBFC;
+    }
+    #blogSearch:focus { border-color: #06332F; background: #fff; }
+
+    .blog-tag-filters {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+    }
+    .tag-filter-btn {
+      padding: .45rem 1rem;
+      border: 1.5px solid #E5E7EB;
+      border-radius: 50px;
+      background: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: .78rem;
+      font-weight: 600;
+      color: #666;
+      cursor: pointer;
+      transition: all .2s;
+      white-space: nowrap;
+    }
+    .tag-filter-btn:hover { border-color: #06332F; color: #06332F; }
+    .tag-filter-btn.active { background: #06332F; color: #fff; border-color: #06332F; }
+    .tag-filter-btn.active-gold { background: #C8A96A; color: #fff; border-color: #C8A96A; }
+
+    /* ── MAIN CONTENT ── */
+    .blog-page-content {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 4rem 2rem 6rem;
+    }
+
+    /* ── FEATURED POST (first card, full width) ── */
+    .blog-featured {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.1);
+      margin-bottom: 3rem;
+      border: 1px solid rgba(6,51,47,.07);
+      background: #fff;
+      transition: transform .35s ease, box-shadow .35s ease;
+    }
+    .blog-featured:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.14);
+    }
+    .blog-featured-img {
+      width: 100%;
+      height: 100%;
+      min-height: 340px;
+      object-fit: cover;
+      display: block;
+    }
+    .blog-featured-placeholder {
+      min-height: 340px;
+      background: linear-gradient(135deg, #0B3D35 0%, #06332F 60%, #071e1c 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .blog-featured-body {
+      padding: 2.5rem 2.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .blog-featured-label {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      font-family: 'Inter', sans-serif;
+      font-size: .62rem;
+      font-weight: 700;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: #C8A96A;
+      margin-bottom: 1rem;
+    }
+    .blog-featured-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.5rem, 2.5vw, 2rem);
+      font-weight: 600;
+      color: #06332F;
+      line-height: 1.25;
+      margin-bottom: 1rem;
+    }
+    .blog-featured-excerpt {
+      font-family: 'Inter', sans-serif;
+      font-size: .88rem;
+      color: #666;
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+      flex: 1;
+    }
+    .blog-featured-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(0,0,0,.06);
+      padding-top: 1rem;
+    }
+
+    /* ── POSTS GRID ── */
+    .blog-posts-section-title {
+      font-family: 'Inter', sans-serif;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: #aaa;
+      margin-bottom: 1.5rem;
+    }
+    .blog-posts-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.75rem;
+      margin-bottom: 3rem;
+    }
+    .bp-card {
+      background: #fff;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(6,51,47,.06);
+      box-shadow: 0 2px 10px rgba(0,0,0,.05);
+      display: flex;
+      flex-direction: column;
+      transition: transform .3s cubic-bezier(.165,.84,.44,1), box-shadow .3s ease;
+    }
+    .bp-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 40px rgba(0,0,0,.11);
+    }
+    .bp-card-img-wrap {
+      position: relative;
+      overflow: hidden;
+      height: 190px;
+    }
+    .bp-card-img {
+      width: 100%;
+      height: 190px;
+      object-fit: cover;
+      transition: transform .5s ease;
+    }
+    .bp-card:hover .bp-card-img { transform: scale(1.05); }
+    .bp-img-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent 50%, rgba(6,51,47,.15) 100%);
+    }
+    .bp-placeholder {
+      height: 190px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .bp-card-body {
+      padding: 1.4rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .bp-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: .6rem;
+    }
+    .bp-tag {
+      font-family: 'Inter', sans-serif;
+      font-size: .62rem;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      padding: .2rem .6rem;
+      border-radius: 50px;
+    }
+    .bp-readtime {
+      font-family: 'Inter', sans-serif;
+      font-size: .7rem;
+      color: #bbb;
+    }
+    .bp-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #06332F;
+      line-height: 1.3;
+      margin-bottom: .6rem;
+    }
+    .bp-excerpt {
+      font-family: 'Inter', sans-serif;
+      font-size: .82rem;
+      color: #777;
+      line-height: 1.6;
+      flex: 1;
+    }
+    .bp-footer {
+      margin-top: 1rem;
+      padding-top: .8rem;
+      border-top: 1px solid rgba(0,0,0,.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .bp-date { font-family: 'Inter', sans-serif; font-size: .7rem; color: #ccc; }
+    .bp-read-more {
+      font-family: 'Inter', sans-serif;
+      font-size: .76rem;
+      font-weight: 700;
+      color: #06332F;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: color .2s, gap .2s;
+    }
+    .bp-read-more:hover { color: #C8A96A; gap: 8px; }
+
+    /* ── EMPTY STATE ── */
+    .blog-empty {
+      text-align: center;
+      padding: 5rem 2rem;
+      color: #aaa;
+    }
+    .blog-empty h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem;
+      color: #ccc;
+      margin-bottom: .5rem;
+    }
+
+    /* ── RETURN LINK ── */
+    .return-home-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 2rem;
+      padding: .55rem 1.1rem;
+      border: 1.5px solid #06332F;
+      border-radius: 8px;
+      color: #06332F;
+      text-decoration: none;
+      font-family: 'Inter', sans-serif;
+      font-size: .82rem;
+      font-weight: 600;
+      transition: all .2s;
+    }
     .return-home-btn:hover { background: #06332F; color: #fff; }
-    
-    .blog-post { margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid #eee; }
-    .blog-title { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 700; color: #06332F; margin-bottom: 0.5rem; }
-    .blog-date { font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #C8A96A; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 1rem; }
-    .blog-excerpt { font-family: 'Inter', sans-serif; font-size: 0.95rem; color: #555; line-height: 1.7; margin-bottom: 1rem; }
-    .read-more { font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; color: #06332F; text-decoration: none; }
-    .read-more:hover { text-decoration: underline; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .blog-featured { grid-template-columns: 1fr; }
+      .blog-featured-img, .blog-featured-placeholder { min-height: 220px; }
+      .blog-posts-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .blog-posts-grid { grid-template-columns: 1fr; }
+      .blog-filter-inner { gap: .6rem; }
+      .blog-page-content { padding: 2.5rem 1.25rem 4rem; }
+    }
   </style>
 </head>
 <body>
+
+<!-- HEADER -->
 <header class="header" id="header">
   <div class="container header-inner">
     <div class="logo"><a href="../index.html"><img src="../Logo.png" alt="Labsourced" class="nav-logo"></a></div>
     <nav class="desktop-nav"><ul class="nav-links">
       <li><a href="../shop.html">Shop</a></li>
       <li><a href="../track.html">Track Order</a></li>
+      <li><a href="../index.html#faqSection">FAQ</a></li>
+      <li><a href="blog.html" style="color:#C8A96A;">Blog</a></li>
     </ul></nav>
     <div class="header-icons">
       <button aria-label="Cart" class="icon-btn cart-icon-btn" id="cartBtn">
@@ -40,6 +389,8 @@
     </div>
   </div>
 </header>
+
+<!-- CART DRAWER -->
 <div class="cart-overlay" id="cartOverlay"></div>
 <div class="cart-drawer" id="cartDrawer">
   <div class="cart-drawer-header"><h3>Cart</h3><button class="cart-close-btn" id="cartCloseBtn">✕</button></div>
@@ -50,31 +401,202 @@
   </div>
 </div>
 
-<div class="legal-hero">
-  <h1>Research Blog</h1>
-  <p>Latest insights, studies, and peptide research news.</p>
+<!-- HERO -->
+<section class="blog-hero">
+  <div class="container" style="position:relative;z-index:1;">
+    <div class="blog-hero-eyebrow">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+      Scientific Research Hub
+    </div>
+    <h1>Research <em>Insights</em></h1>
+    <p>Peer-reviewed perspectives, lab intelligence, and peptide science — from the Labsourced scientific team.</p>
+  </div>
+</section>
+
+<!-- FILTER BAR -->
+<div class="blog-filter-bar">
+  <div class="blog-filter-inner">
+    <div class="blog-search-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="blogSearch" placeholder="Search articles…">
+    </div>
+    <div class="blog-tag-filters" id="tagFilters">
+      <button class="tag-filter-btn active" data-tag="all">All Articles</button>
+      <button class="tag-filter-btn" data-tag="Research Update">Research Update</button>
+      <button class="tag-filter-btn" data-tag="Science Brief">Science Brief</button>
+      <button class="tag-filter-btn" data-tag="Lab Insight">Lab Insight</button>
+    </div>
+  </div>
 </div>
 
-<div class="legal-content">
-  <a href="../index.html" class="return-home-btn">&larr; Return to Home</a>
-  
-  <div class="blog-post">
-    <div class="blog-date">September 15, 2026</div>
-    <h2 class="blog-title">Understanding BPC-157 Mechanisms in Tissue Repair</h2>
-    <div class="blog-excerpt">Recent studies have shown promising results regarding the angiogenic properties of BPC-157 in lab environments. We explore the current literature on how this 15-amino acid sequence influences vascular endothelial growth factor (VEGF) expression.</div>
-    <a href="#" class="read-more">Read Full Article &rarr;</a>
-  </div>
+<!-- CONTENT -->
+<div class="blog-page-content">
+  <a href="../index.html" class="return-home-btn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Return to Home
+  </a>
 
-  <div class="blog-post">
-    <div class="blog-date">August 28, 2026</div>
-    <h2 class="blog-title">The Synergistic Effects of CJC-1295 and Ipamorelin</h2>
-    <div class="blog-excerpt">Combining GHRH analogues with GHRPs is a standard practice in neuroendocrine research. This article breaks down the pharmacological synergy between CJC-1295 and Ipamorelin when studying pulse frequency.</div>
-    <a href="#" class="read-more">Read Full Article &rarr;</a>
-  </div>
-
+  <!-- Posts injected here by JS -->
+  <div id="blogPageContent"></div>
 </div>
+
+<!-- FOOTER STRIP -->
+<footer class="footer" style="padding:2.5rem 0;">
+  <div class="container" style="text-align:center;">
+    <p style="color:rgba(255,255,255,.5);font-family:'Inter',sans-serif;font-size:.8rem;">© 2026 Labsourced. All Rights Reserved. For Research Purposes Only.</p>
+  </div>
+</footer>
 
 <script src="../js/supabase.js"></script>
 <script src="../js/script.js"></script>
+<script>
+/* ── Blog page dynamic renderer ── */
+const DEFAULT_BLOG_POSTS = [
+  { id:'b1', tag:'Research Update', title:'BPC-157: Mechanisms of Tissue Repair in Current Research', excerpt:'A review of the latest peer-reviewed findings on BPC-157\'s role in accelerating connective tissue regeneration and its implications for sports medicine research.', date:'September 2026', img:null },
+  { id:'b2', tag:'Science Brief', title:'Semaglutide and Metabolic Research: What the Data Shows', excerpt:'Our scientific team reviews the growing body of evidence around GLP-1 receptor agonism and its role in metabolic disease research applications.', date:'August 2026', img:null },
+  { id:'b3', tag:'Lab Insight', title:'Understanding HPLC Testing: How We Verify Peptide Purity', excerpt:'An inside look at the HPLC analysis process used to verify every batch of peptides before it leaves our facility — and what to look for in a Certificate of Analysis.', date:'August 2026', img:null },
+  { id:'b4', tag:'Research Update', title:'TB-500 and Wound Healing: A Summary of Current Evidence', excerpt:'We explore the most compelling research findings on Thymosin Beta-4 and its role in promoting cellular migration, angiogenesis, and tissue recovery.', date:'July 2026', img:null },
+  { id:'b5', tag:'Science Brief', title:'CJC-1295 and Growth Hormone Research: Key Considerations', excerpt:'A scientific overview of CJC-1295\'s mechanism of action, dosing considerations in research contexts, and what current studies reveal about its applications.', date:'July 2026', img:null },
+  { id:'b6', tag:'Lab Insight', title:'Peptide Storage Best Practices for Research Facilities', excerpt:'Proper storage is critical to peptide integrity. Our team shares evidence-based guidelines for maintaining peptide stability in research laboratory environments.', date:'June 2026', img:null }
+];
+
+const TAG_COLORS = {
+  'Research Update': { bg:'rgba(6,51,47,0.09)', text:'#06332F' },
+  'Science Brief':   { bg:'rgba(200,169,106,0.15)', text:'#87651F' },
+  'Lab Insight':     { bg:'rgba(59,130,246,0.12)', text:'#1e40af' },
+};
+
+const GRADIENTS = [
+  'linear-gradient(135deg,#0B3D35,#06332F,#071e1c)',
+  'linear-gradient(135deg,#1a2a2a,#0d3b31,#061f1c)',
+  'linear-gradient(135deg,#0f2a20,#0b3535,#07232a)',
+];
+
+function readTime(text) {
+  return Math.max(1, Math.round((text || '').trim().split(/\s+/).length / 200));
+}
+
+function getPosts() {
+  const stored = localStorage.getItem('labsourced_blogs');
+  return stored ? JSON.parse(stored) : [...DEFAULT_BLOG_POSTS];
+}
+
+let allPosts = getPosts();
+let activeTag = 'all';
+let searchQ = '';
+
+function getFiltered() {
+  return allPosts.filter(p => {
+    const matchTag = activeTag === 'all' || p.tag === activeTag;
+    const q = searchQ.toLowerCase();
+    const matchQ = !q || (p.title||'').toLowerCase().includes(q) || (p.excerpt||'').toLowerCase().includes(q);
+    return matchTag && matchQ;
+  });
+}
+
+function placeholderHtml(idx) {
+  return `<div class="bp-placeholder" style="background:${GRADIENTS[idx % GRADIENTS.length]};">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(200,169,106,.5)" stroke-width="1.2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+  </div>`;
+}
+
+function renderBlogPage() {
+  const posts = getFiltered();
+  const container = document.getElementById('blogPageContent');
+  if (!container) return;
+
+  if (!posts.length) {
+    container.innerHTML = `<div class="blog-empty"><div style="font-size:3rem;margin-bottom:1rem;">🔬</div><h3>No articles found</h3><p>Try a different search term or tag filter.</p></div>`;
+    return;
+  }
+
+  let html = '';
+  const [featured, ...rest] = posts;
+  const featStyle = TAG_COLORS[featured.tag] || { bg:'rgba(200,169,106,0.12)', text:'#C8A96A' };
+  const featRt = readTime(featured.excerpt);
+
+  // Featured (first post — full width)
+  html += `
+  <div class="blog-featured">
+    <div style="overflow:hidden;">
+      ${featured.img
+        ? `<img src="${featured.img}" alt="${featured.title}" class="blog-featured-img" onerror="this.closest('.blog-featured').querySelector('.blog-featured-placeholder') && (this.style.display='none')">`
+        : `<div class="blog-featured-placeholder">${placeholderHtml(0)}</div>`}
+    </div>
+    <div class="blog-featured-body">
+      <div class="blog-featured-label">
+        <span style="width:6px;height:6px;background:#C8A96A;border-radius:50%;flex-shrink:0;"></span>
+        Featured Article
+      </div>
+      <h2 class="blog-featured-title">${featured.title}</h2>
+      <p class="blog-featured-excerpt">${featured.excerpt}</p>
+      <div class="blog-featured-footer">
+        <div style="display:flex;align-items:center;gap:.75rem;">
+          <span style="font-size:.65rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;background:${featStyle.bg};color:${featStyle.text};padding:.22rem .65rem;border-radius:50px;font-family:'Inter',sans-serif;">${featured.tag}</span>
+          <span style="font-family:'Inter',sans-serif;font-size:.72rem;color:#bbb;">${featured.date || ''}</span>
+          <span style="font-family:'Inter',sans-serif;font-size:.72rem;color:#bbb;">${featRt} min read</span>
+        </div>
+        <a href="#" style="font-family:'Inter',sans-serif;font-weight:700;font-size:.8rem;color:#06332F;text-decoration:none;display:flex;align-items:center;gap:5px;">Read Article <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+      </div>
+    </div>
+  </div>`;
+
+  // Remaining posts
+  if (rest.length) {
+    html += `<p class="blog-posts-section-title">More Articles</p>`;
+    html += `<div class="blog-posts-grid">`;
+    rest.forEach((p, i) => {
+      const tc = TAG_COLORS[p.tag] || { bg:'rgba(6,51,47,0.08)', text:'#06332F' };
+      const rt = readTime(p.excerpt);
+      html += `
+      <article class="bp-card">
+        <div class="bp-card-img-wrap">
+          ${p.img
+            ? `<img src="${p.img}" alt="${p.title}" class="bp-card-img"><div class="bp-img-overlay"></div>`
+            : placeholderHtml(i + 1)}
+        </div>
+        <div class="bp-card-body">
+          <div class="bp-meta">
+            <span class="bp-tag" style="background:${tc.bg};color:${tc.text};">${p.tag || 'Research'}</span>
+            <span class="bp-readtime">${rt} min read</span>
+          </div>
+          <h3 class="bp-title">${p.title}</h3>
+          <p class="bp-excerpt">${p.excerpt}</p>
+          <div class="bp-footer">
+            <span class="bp-date">${p.date || ''}</span>
+            <a href="#" class="bp-read-more">Read Article <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+          </div>
+        </div>
+      </article>`;
+    });
+    html += `</div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+// Tag filter
+document.querySelectorAll('.tag-filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tag-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeTag = btn.dataset.tag;
+    renderBlogPage();
+  });
+});
+
+// Search
+let searchTimer;
+document.getElementById('blogSearch').addEventListener('input', e => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    searchQ = e.target.value;
+    renderBlogPage();
+  }, 200);
+});
+
+// Initial render
+renderBlogPage();
+</script>
 </body>
 </html>

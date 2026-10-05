@@ -198,22 +198,78 @@ function loadBlog() {
   if (!grid) return;
   const stored = localStorage.getItem('labsourced_blogs');
   const posts = stored ? JSON.parse(stored) : DEFAULT_BLOG_POSTS;
-  if (!posts.length) { grid.innerHTML = '<p style="text-align:center;color:#999;grid-column:1/-1;">No blog posts yet.</p>'; return; }
-  grid.innerHTML = posts.map(p => `
+  if (!posts.length) {
+    grid.innerHTML = '<p style="text-align:center;color:#999;grid-column:1/-1;">No blog posts yet.</p>';
+    return;
+  }
+
+  // Tag → accent colour map
+  const TAG_COLORS = {
+    'Research Update':  { bg: 'rgba(6,51,47,0.09)',  text: '#06332F' },
+    'Science Brief':    { bg: 'rgba(200,169,106,0.15)', text: '#87651F' },
+    'Lab Insight':      { bg: 'rgba(59,130,246,0.12)', text: '#1e40af' },
+  };
+
+  // Gradient overlays for placeholder cards (cycles)
+  const GRADIENTS = [
+    'linear-gradient(135deg, #0B3D35 0%, #06332F 50%, #071e1c 100%)',
+    'linear-gradient(135deg, #1a2a2a 0%, #0d3b31 50%, #061f1c 100%)',
+    'linear-gradient(135deg, #0f2a20 0%, #0b3535 50%, #07232a 100%)',
+  ];
+
+  // Compute approximate read time (words / 200 wpm)
+  function readTime(text) {
+    const words = (text || '').trim().split(/\s+/).length;
+    return Math.max(1, Math.round(words / 200));
+  }
+
+  grid.innerHTML = posts.map((p, i) => {
+    const tag = p.tag || 'Research';
+    const tagStyle = TAG_COLORS[tag] || { bg: 'rgba(6,51,47,0.08)', text: '#06332F' };
+    const gradient = GRADIENTS[i % GRADIENTS.length];
+    const rt = readTime(p.excerpt);
+
+    const imgHtml = p.img
+      ? `<div class="blog-card-img-wrap">
+           <img src="${p.img}" alt="${p.title}" class="blog-card-img" loading="lazy" onerror="this.closest('.blog-card-img-wrap').innerHTML=blogPlaceholder(${i})">
+           <div class="blog-card-img-overlay"></div>
+         </div>`
+      : `<div class="blog-card-img-placeholder" style="background:${gradient}">
+           <div class="blog-placeholder-inner">
+             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(200,169,106,0.55)" stroke-width="1.2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+             <span>${tag}</span>
+           </div>
+         </div>`;
+
+    return `
     <article class="blog-card">
-      ${p.img
-        ? `<img src="${p.img}" alt="${p.title}" class="blog-card-img">`
-        : `<div class="blog-card-img-placeholder">🔬</div>`}
+      ${imgHtml}
       <div class="blog-card-body">
-        <span class="blog-card-tag">${p.tag || 'Research'}</span>
+        <div class="blog-card-meta-row">
+          <span class="blog-card-tag" style="background:${tagStyle.bg};color:${tagStyle.text};">${tag}</span>
+          <span class="blog-read-time">${rt} min read</span>
+        </div>
         <h3 class="blog-card-title">${p.title}</h3>
         <p class="blog-card-excerpt">${p.excerpt}</p>
         <div class="blog-card-footer">
-          <span>${p.date || ''}</span>
-          <a class="blog-read-more" href="#">Read More →</a>
+          <span class="blog-date">${p.date || ''}</span>
+          <a class="blog-read-more" href="pages/blog.html">Read Article
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
         </div>
+
       </div>
-    </article>`).join('');
+    </article>`;
+  }).join('');
+}
+
+function blogPlaceholder(i) {
+  const GRADIENTS = [
+    'linear-gradient(135deg, #0B3D35 0%, #06332F 50%, #071e1c 100%)',
+    'linear-gradient(135deg, #1a2a2a 0%, #0d3b31 50%, #061f1c 100%)',
+    'linear-gradient(135deg, #0f2a20 0%, #0b3535 50%, #07232a 100%)',
+  ];
+  return `<div class="blog-card-img-placeholder" style="background:${GRADIENTS[i%GRADIENTS.length]}"><div class="blog-placeholder-inner"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(200,169,106,0.55)" stroke-width="1.2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg></div></div>`;
 }
 
 /* ---- INIT ---- */

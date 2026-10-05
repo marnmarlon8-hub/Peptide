@@ -199,10 +199,30 @@
         <div class="checkout-summary-box">
           <h3>Order Summary</h3>
           <div id="summaryItems"></div>
+
+          <!-- Minimum Order Notice -->
+          <div id="minOrderNotice" class="min-order-notice" style="display:none;">
+            <span>⚠️ Minimum order is <strong>$190.00</strong>. Please add more items.</span>
+          </div>
+
+          <!-- Promo Code Section -->
+          <div class="promo-code-section">
+            <div class="promo-code-label">🎁 Have a promo code? <span>Get 10% off your order!</span></div>
+            <div class="promo-input-row">
+              <input type="text" id="promoCodeInput" placeholder="Enter promo code" autocomplete="off" spellcheck="false">
+              <button id="applyPromoBtn" onclick="applyPromoCode()">Apply</button>
+            </div>
+            <div id="promoMessage" class="promo-message"></div>
+          </div>
+
           <div class="summary-totals">
             <div class="summary-row"><span>Subtotal</span><span id="summarySubtotal"></span></div>
-            <div class="summary-row"><span>Shipping</span><span class="text-gold">Free</span></div>
-            <div class="summary-row summary-total"><span>Total</span><span id="summaryTotal"></span></div>
+            <div class="summary-row" id="promoDiscountRow" style="display:none;">
+              <span>Promo Discount (<span id="promoCodeApplied"></span>)</span>
+              <span class="text-gold" id="promoDiscountAmount"></span>
+            </div>
+            <div class="summary-row"><span>Shipping</span><span id="summaryShipping">$35.00</span></div>
+            <div class="summary-row summary-total"><span>Total (incl. shipping)</span><span id="summaryTotal"></span></div>
           </div>
           <div class="summary-currency-note" id="summaryCurrencyNote"></div>
         </div>

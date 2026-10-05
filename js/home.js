@@ -8,21 +8,27 @@ async function loadFeaturedProducts() {
   if (!grid) return;
 
   try {
-    // Fetch featured/bestseller products
+    // Fetch ALL active products — filter featured/bestseller client-side
+    // (Supabase 'or' via URLSearchParams requires special handling not supported by our db.query wrapper)
     const products = await db.query('products', {
-      select: 'id,name,slug,image_urls,is_featured,is_bestseller,short_description',
-      filter: { 'is_active': 'eq.true', 'or': '(is_featured.eq.true,is_bestseller.eq.true)' },
+      select: 'id,name,slug,image_urls,is_featured,is_bestseller,short_description,is_active',
+      filter: { 'is_active': 'eq.true' },
       order: 'sort_order.asc',
-      limit: '8'
+      limit: '50'
     });
 
-    if (!products || !products.length) {
+    // Filter for featured or bestseller client-side
+    const featured = products
+      ? products.filter(p => p.is_featured || p.is_bestseller).slice(0, 8)
+      : [];
+
+    if (!featured || !featured.length) {
       loadStaticFallbackProducts();
       return;
     }
 
     // Fetch all variations for these products
-    const ids = products.map(p => p.id);
+    const ids = featured.map(p => p.id);
     const variations = await db.query('product_variations', {
       select: 'id,product_id,label,price_usd',
       filter: { 'product_id': `in.(${ids.join(',')})`, 'is_available': 'eq.true' },
@@ -35,7 +41,7 @@ async function loadFeaturedProducts() {
       filter: { 'product_id': `in.(${ids.join(',')})`, 'is_approved': 'eq.true' }
     });
 
-    grid.innerHTML = products.slice(0,6).map(p => {
+    grid.innerHTML = featured.slice(0,6).map(p => {
       const vars = variations.filter(v => v.product_id === p.id);
       const firstVar = vars[0];
       const productReviews = reviews.filter(r => r.product_id === p.id);

@@ -411,18 +411,21 @@ window.adminLogout = adminLogout;
 // =============================================
 // LOAD ALL DATA
 // =============================================
+let allPromoCodes = [];
+
 async function loadAllData() {
   try {
-    [allCategories, allProducts, allVariations, allOrders, allReviews] = await Promise.all([
+    [allCategories, allProducts, allVariations, allOrders, allReviews, allPromoCodes] = await Promise.all([
       adminFetch('categories', { select: '*', order: 'sort_order.asc' }),
       adminFetch('products', { select: '*', order: 'sort_order.asc' }),
       adminFetch('product_variations', { select: '*', order: 'sort_order.asc' }),
       adminFetch('orders', { select: '*', order: 'created_at.desc' }),
-      adminFetch('reviews', { select: '*', order: 'created_at.desc' })
+      adminFetch('reviews', { select: '*', order: 'created_at.desc' }),
+      adminFetch('promo_codes', { select: '*', order: 'created_at.desc' })
     ]);
   } catch(e) {
     console.error('Load error:', e);
-    allCategories = []; allProducts = []; allVariations = []; allOrders = []; allReviews = [];
+    allCategories = []; allProducts = []; allVariations = []; allOrders = []; allReviews = []; allPromoCodes = [];
   }
 
   renderOverview();
@@ -431,6 +434,7 @@ async function loadAllData() {
   renderOrders(allOrders);
   renderReviews('pending');
   renderCurrencies();
+  renderPromoCodes();
   populateCategoryFilter();
   populateProductCategorySelect();
 }
@@ -440,7 +444,8 @@ async function loadAllData() {
 // =============================================
 const SECTION_TITLES = {
   overview: 'Dashboard Overview', products: 'Products', categories: 'Categories',
-  orders: 'Orders', reviews: 'Reviews', pages: 'Pages (CMS)', currencies: 'Currency Settings'
+  orders: 'Orders', reviews: 'Reviews', pages: 'Pages (CMS)', currencies: 'Currency Settings',
+  promocodes: 'Promo Codes'
 };
 
 function showSection(id, btn) {
@@ -869,15 +874,30 @@ function openCategoryModal(id = null) {
   document.getElementById('cm_desc').value = '';
   pendingCatImage = null;
 
-  // Image preview
-  const imgPreview = document.getElementById('cm_image_preview');
+  // Image preview — new upload zone UI
+  const imgPreviewWrap = document.getElementById('catImgPreviewWrap');
+  const imgPlaceholder = document.getElementById('catImgPlaceholder');
+  const imgPreviewEl = document.getElementById('cm_image_preview');
   const imgInput = document.getElementById('cm_image');
+  const imgDataEl = document.getElementById('cm_image_data');
+  const imgUrlEl = document.getElementById('cm_image_url');
   if (imgInput) imgInput.value = '';
-  if (imgPreview) {
-    const existingImg = id ? (localStorage.getItem(`admin_cat_img_${id}`) || allCategories.find(c => c.id === id)?.image_url) : null;
-    imgPreview.innerHTML = existingImg
-      ? `<img src="${existingImg}" style="max-height:100px;border-radius:8px;border:1px solid #eee;">`
-      : '<span style="color:#aaa;font-size:.8rem;">No image uploaded yet</span>';
+  if (imgUrlEl) imgUrlEl.value = '';
+  if (imgDataEl) imgDataEl.value = '';
+  pendingCatImage = null;
+
+  const existingImg = id
+    ? (localStorage.getItem(`admin_cat_img_${id}`) || allCategories.find(c => c.id === id)?.image_url)
+    : null;
+  if (existingImg && imgPreviewEl && imgPreviewWrap && imgPlaceholder) {
+    imgPreviewEl.src = existingImg;
+    imgPreviewWrap.style.display = '';
+    imgPlaceholder.style.display = 'none';
+    pendingCatImage = existingImg;
+    if (imgDataEl) imgDataEl.value = existingImg;
+  } else if (imgPreviewWrap && imgPlaceholder) {
+    imgPreviewWrap.style.display = 'none';
+    imgPlaceholder.style.display = '';
   }
 
   if (id) {
@@ -911,6 +931,11 @@ async function saveCategory() {
   };
   if (pendingCatImage) {
     data.image_url = pendingCatImage;
+  } else {
+    // Check URL field too
+    const urlEl = document.getElementById('cm_image_url');
+    const urlVal = urlEl?.value.trim();
+    if (urlVal) data.image_url = urlVal;
   }
 
   try {
@@ -1036,7 +1061,9 @@ async function viewOrder(id) {
       <div class="od-row"><span>Payment Method</span><span>${order.payment_method}</span></div>
       <div class="od-row"><span>Research Purpose</span><span>${order.reason_for_purchase || '—'}</span></div>
       <div class="od-row"><span>Currency</span><span>${order.currency}</span></div>
-      <div class="od-row"><span>Total (USD)</span><span><strong>$${order.total_usd}</strong></span></div>
+      <div class="od-row"><span>Total (USD)</span><span><strong>$${parseFloat(order.total_usd).toFixed(2)}</strong></span></div>
+      ${order.promo_code ? `
+      <div class="od-row" style="color:#C8A96A;"><span>Promo Code</span><span><strong>${order.promo_code} (${order.promo_discount_percent}% off, -$${parseFloat(order.promo_discount_amount||0).toFixed(2)})</strong></span></div>` : ''}
       <div class="od-row"><span>Date</span><span>${new Date(order.created_at).toLocaleString()}</span></div>
       ${order.notes ? `<div class="od-row"><span>Notes</span><span>${order.notes}</span></div>` : ''}
     </div>
@@ -1096,12 +1123,60 @@ function previewCatImage(event) {
   const reader = new FileReader();
   reader.onload = (e) => {
     pendingCatImage = e.target.result;
-    const preview = document.getElementById('cm_image_preview');
-    if (preview) preview.innerHTML = `<img src="${pendingCatImage}" style="max-height:100px;border-radius:8px;border:1px solid #eee;margin-top:.25rem;">`;
+    const imgEl = document.getElementById('cm_image_preview');
+    const wrapEl = document.getElementById('catImgPreviewWrap');
+    const placeholder = document.getElementById('catImgPlaceholder');
+    const dataEl = document.getElementById('cm_image_data');
+    if (imgEl) imgEl.src = pendingCatImage;
+    if (wrapEl) wrapEl.style.display = '';
+    if (placeholder) placeholder.style.display = 'none';
+    if (dataEl) dataEl.value = pendingCatImage;
   };
   reader.readAsDataURL(file);
 }
 window.previewCatImage = previewCatImage;
+
+function previewCatImgUrl(url) {
+  if (!url || !url.startsWith('http')) return;
+  pendingCatImage = url;
+  const imgEl = document.getElementById('cm_image_preview');
+  const wrapEl = document.getElementById('catImgPreviewWrap');
+  const placeholder = document.getElementById('catImgPlaceholder');
+  const dataEl = document.getElementById('cm_image_data');
+  if (imgEl) imgEl.src = url;
+  if (wrapEl) wrapEl.style.display = '';
+  if (placeholder) placeholder.style.display = 'none';
+  if (dataEl) dataEl.value = url;
+}
+window.previewCatImgUrl = previewCatImgUrl;
+
+function removeCatImg() {
+  pendingCatImage = null;
+  const imgEl = document.getElementById('cm_image_preview');
+  const wrapEl = document.getElementById('catImgPreviewWrap');
+  const placeholder = document.getElementById('catImgPlaceholder');
+  const dataEl = document.getElementById('cm_image_data');
+  const urlEl = document.getElementById('cm_image_url');
+  const fileEl = document.getElementById('cm_image');
+  if (imgEl) imgEl.src = '';
+  if (wrapEl) wrapEl.style.display = 'none';
+  if (placeholder) placeholder.style.display = '';
+  if (dataEl) dataEl.value = '';
+  if (urlEl) urlEl.value = '';
+  if (fileEl) fileEl.value = '';
+}
+window.removeCatImg = removeCatImg;
+
+function handleCatImgDrop(event) {
+  event.preventDefault();
+  document.getElementById('catImgZone')?.classList.remove('drag-over');
+  const file = event.dataTransfer?.files[0];
+  if (file && file.type.startsWith('image/')) {
+    previewCatImage({ target: { files: [file] } });
+  }
+}
+window.handleCatImgDrop = handleCatImgDrop;
+
 
 function previewProductImage(event) {
   const file = event.target.files[0];
@@ -1513,19 +1588,42 @@ function loadAdminBlogs() {
 function renderAdminBlogs() {
   const grid = document.getElementById('blogAdminGrid');
   if (!grid) return;
-  grid.innerHTML = adminBlogs.map(b => `
-    <div class="sc-card" style="margin-bottom:1rem;display:flex;gap:1rem;align-items:center;">
-      ${b.img ? `<img src="${b.img}" style="width:100px;height:70px;object-fit:cover;border-radius:8px">` : `<div style="width:100px;height:70px;background:#eee;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;">🔬</div>`}
-      <div style="flex:1">
-        <h4 style="margin-bottom:0.25rem">${b.title}</h4>
-        <div style="font-size:0.8rem;color:#666">${b.tag} | ${b.date}</div>
+
+  if (!adminBlogs.length) {
+    grid.innerHTML = '<p style="text-align:center;color:#aaa;padding:2rem;font-family:\'Inter\',sans-serif;font-size:.85rem;">No blog posts yet. Click "+ Add Post" to create your first post.</p>';
+    return;
+  }
+
+  const TAG_BG = { 'Research Update': '#e8f5f2', 'Science Brief': '#fef9ec', 'Lab Insight': '#eef3fc' };
+  const TAG_COLOR = { 'Research Update': '#06332F', 'Science Brief': '#87651F', 'Lab Insight': '#1e40af' };
+
+  grid.innerHTML = adminBlogs.map(b => {
+    const tagBg = TAG_BG[b.tag] || '#f0f0f0';
+    const tagColor = TAG_COLOR[b.tag] || '#333';
+    const thumbHtml = b.img
+      ? `<img src="${b.img}" style="width:90px;height:64px;object-fit:cover;border-radius:10px;flex-shrink:0;border:1px solid rgba(0,0,0,.06);" onerror="this.style.display='none'">`
+      : `<div style="width:90px;height:64px;flex-shrink:0;border-radius:10px;background:linear-gradient(135deg,#0B3D35,#06332F);display:flex;align-items:center;justify-content:center;">
+           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(200,169,106,.6)" stroke-width="1.5"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+         </div>`;
+
+    return `
+    <div style="display:flex;gap:1rem;align-items:center;padding:1rem;border:1px solid #F0F2F5;border-radius:14px;background:#fff;margin-bottom:.75rem;box-shadow:0 1px 4px rgba(0,0,0,.04);transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.09)'" onmouseout="this.style.boxShadow='0 1px 4px rgba(0,0,0,.04)'">
+      ${thumbHtml}
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem;flex-wrap:wrap;">
+          <span style="font-size:.65rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;background:${tagBg};color:${tagColor};padding:.18rem .6rem;border-radius:50px;">${b.tag || 'Research'}</span>
+          ${b.date ? `<span style="font-size:.7rem;color:#bbb;font-family:'Inter',sans-serif;">${b.date}</span>` : ''}
+          ${b.img ? '<span style="font-size:.65rem;color:#10B981;font-weight:600;">📷 Has image</span>' : '<span style="font-size:.65rem;color:#aaa;">No image</span>'}
+        </div>
+        <div style="font-family:\'Cormorant Garamond\',serif;font-size:1rem;font-weight:600;color:#06332F;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${b.title}</div>
+        <div style="font-size:.75rem;color:#999;margin-top:.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Inter',sans-serif;">${(b.excerpt || '').substring(0, 80)}${(b.excerpt || '').length > 80 ? '…' : ''}</div>
       </div>
-      <div class="action-btns">
-        <button class="btn-icon" onclick="openBlogModal('${b.id}')" title="Edit">✏️</button>
-        <button class="btn-icon" onclick="deleteBlogPost('${b.id}')" title="Delete" style="color:#e74c3c">🗑️</button>
+      <div class="action-btns" style="flex-shrink:0;">
+        <button class="btn-icon" onclick="openBlogModal('${b.id}')" title="Edit post">✏️ Edit</button>
+        <button class="btn-icon danger" onclick="deleteBlogPost('${b.id}')" title="Delete post">🗑 Delete</button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function openBlogModal(id) {
@@ -1539,7 +1637,13 @@ function openBlogModal(id) {
   const fileInput = document.getElementById('blogImgFile');
   
   fileInput.value = '';
-  
+  // Reset upload zone
+  const wrapEl = document.getElementById('blogImgPreviewWrap');
+  const placeholder = document.getElementById('blogImgPlaceholder');
+  const imgEl = document.getElementById('blogImgPreview');
+  const urlEl = document.getElementById('blogImgUrl');
+  if (urlEl) urlEl.value = '';
+
   if (id) {
     const post = adminBlogs.find(b => b.id === id);
     idInput.value = id;
@@ -1548,7 +1652,14 @@ function openBlogModal(id) {
     excerpt.value = post.excerpt;
     date.value = post.date || '';
     imgData.value = post.img || '';
-    if (post.img) { preview.src = post.img; preview.style.display = 'block'; } else { preview.style.display = 'none'; }
+    if (post.img) {
+      if (imgEl) imgEl.src = post.img;
+      if (wrapEl) wrapEl.style.display = '';
+      if (placeholder) placeholder.style.display = 'none';
+    } else {
+      if (wrapEl) wrapEl.style.display = 'none';
+      if (placeholder) placeholder.style.display = '';
+    }
     document.getElementById('blogModalTitle').textContent = 'Edit Blog Post';
   } else {
     idInput.value = '';
@@ -1557,7 +1668,8 @@ function openBlogModal(id) {
     excerpt.value = '';
     date.value = '';
     imgData.value = '';
-    preview.style.display = 'none';
+    if (wrapEl) wrapEl.style.display = 'none';
+    if (placeholder) placeholder.style.display = '';
     document.getElementById('blogModalTitle').textContent = 'Add Blog Post';
   }
   document.getElementById('blogModalOverlay').classList.add('open');
@@ -1569,13 +1681,54 @@ function previewBlogImg(input) {
     const reader = new FileReader();
     reader.onload = function(e) {
       document.getElementById('blogImgData').value = e.target.result;
-      document.getElementById('blogImgPreview').src = e.target.result;
-      document.getElementById('blogImgPreview').style.display = 'block';
-    }
+      const imgEl = document.getElementById('blogImgPreview');
+      const wrapEl = document.getElementById('blogImgPreviewWrap');
+      const placeholder = document.getElementById('blogImgPlaceholder');
+      if (imgEl) imgEl.src = e.target.result;
+      if (wrapEl) wrapEl.style.display = '';
+      if (placeholder) placeholder.style.display = 'none';
+    };
     reader.readAsDataURL(input.files[0]);
   }
 }
 window.previewBlogImg = previewBlogImg;
+
+function previewBlogImgUrl(url) {
+  if (!url || !url.startsWith('http')) return;
+  document.getElementById('blogImgData').value = url;
+  const imgEl = document.getElementById('blogImgPreview');
+  const wrapEl = document.getElementById('blogImgPreviewWrap');
+  const placeholder = document.getElementById('blogImgPlaceholder');
+  if (imgEl) imgEl.src = url;
+  if (wrapEl) wrapEl.style.display = '';
+  if (placeholder) placeholder.style.display = 'none';
+}
+window.previewBlogImgUrl = previewBlogImgUrl;
+
+function removeBlogImg() {
+  document.getElementById('blogImgData').value = '';
+  const imgEl = document.getElementById('blogImgPreview');
+  const wrapEl = document.getElementById('blogImgPreviewWrap');
+  const placeholder = document.getElementById('blogImgPlaceholder');
+  const urlEl = document.getElementById('blogImgUrl');
+  const fileEl = document.getElementById('blogImgFile');
+  if (imgEl) imgEl.src = '';
+  if (wrapEl) wrapEl.style.display = 'none';
+  if (placeholder) placeholder.style.display = '';
+  if (urlEl) urlEl.value = '';
+  if (fileEl) fileEl.value = '';
+}
+window.removeBlogImg = removeBlogImg;
+
+function handleBlogImgDrop(event) {
+  event.preventDefault();
+  document.getElementById('blogImgZone')?.classList.remove('drag-over');
+  const file = event.dataTransfer?.files[0];
+  if (file && file.type.startsWith('image/')) {
+    previewBlogImg({ files: [file] });
+  }
+}
+window.handleBlogImgDrop = handleBlogImgDrop;
 
 function saveBlogPost() {
   const id = document.getElementById('blogEditId').value;
@@ -1745,3 +1898,135 @@ CREATE POLICY "Admin Delete Images" ON storage.objects FOR DELETE USING (bucket_
   document.body.appendChild(overlay);
 }
 window.showRlsFixModal = showRlsFixModal;
+
+// =============================================
+// PROMO CODES
+// =============================================
+
+function renderPromoCodes() {
+  const tbody = document.getElementById('promoCodesTableBody');
+  if (!tbody) return;
+
+  if (!allPromoCodes.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2rem;color:#aaa;">No promo codes yet. Click "+ Add Promo Code" to create one.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = allPromoCodes.map(p => {
+    const isExpired = p.expires_at && new Date(p.expires_at) < new Date();
+    const expiryText = p.expires_at ? new Date(p.expires_at).toLocaleDateString() : '—';
+    const maxUsesText = p.max_uses !== null && p.max_uses !== undefined ? p.max_uses : 'Unlimited';
+    const statusLabel = !p.is_active ? 'Disabled' : isExpired ? 'Expired' : 'Active';
+    const statusClass = !p.is_active || isExpired ? 'sb-cancelled' : 'sb-delivered';
+    return `
+    <tr>
+      <td><strong style="font-family:monospace;font-size:.95rem;letter-spacing:.05em;color:#06332F;">${p.code}</strong></td>
+      <td><strong style="color:#C8A96A;">${parseFloat(p.discount_percent)}%</strong></td>
+      <td style="color:#888;font-size:.82rem;">${p.description || '—'}</td>
+      <td>${p.usage_count || 0}</td>
+      <td>${maxUsesText}</td>
+      <td style="font-size:.82rem;">${expiryText}</td>
+      <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+      <td>
+        <div class="action-btns">
+          <button class="btn-icon" onclick="editPromoCode('${p.id}')">✏️ Edit</button>
+          <button class="btn-icon danger" onclick="deletePromoCode('${p.id}')">🗑 Delete</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+window.renderPromoCodes = renderPromoCodes;
+
+function openPromoModal(id = null) {
+  document.getElementById('editPromoId').value = id || '';
+  document.getElementById('promoModalTitle').textContent = id ? 'Edit Promo Code' : 'Add Promo Code';
+  document.getElementById('promo_code').value = '';
+  document.getElementById('promo_discount').value = '10';
+  document.getElementById('promo_description').value = '';
+  document.getElementById('promo_max_uses').value = '';
+  document.getElementById('promo_expires_at').value = '';
+  document.getElementById('promo_active').checked = true;
+
+  if (id) {
+    const p = allPromoCodes.find(x => x.id === id);
+    if (p) {
+      document.getElementById('promo_code').value = p.code || '';
+      document.getElementById('promo_discount').value = parseFloat(p.discount_percent) || 10;
+      document.getElementById('promo_description').value = p.description || '';
+      document.getElementById('promo_max_uses').value = p.max_uses !== null && p.max_uses !== undefined ? p.max_uses : '';
+      if (p.expires_at) {
+        // Format for datetime-local input
+        const dt = new Date(p.expires_at);
+        const pad = n => String(n).padStart(2, '0');
+        document.getElementById('promo_expires_at').value = `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+      }
+      document.getElementById('promo_active').checked = !!p.is_active;
+    }
+  }
+
+  document.getElementById('promoModalOverlay').classList.add('open');
+}
+window.openPromoModal = openPromoModal;
+
+function editPromoCode(id) { openPromoModal(id); }
+window.editPromoCode = editPromoCode;
+
+async function savePromoCode() {
+  const id = document.getElementById('editPromoId').value;
+  const code = document.getElementById('promo_code').value.trim().toUpperCase().replace(/\s+/g, '');
+  const discountRaw = parseFloat(document.getElementById('promo_discount').value);
+  const description = document.getElementById('promo_description').value.trim();
+  const maxUsesRaw = document.getElementById('promo_max_uses').value.trim();
+  const expiresRaw = document.getElementById('promo_expires_at').value;
+  const isActive = document.getElementById('promo_active').checked;
+
+  if (!code) { alert('Promo code is required.'); return; }
+  if (isNaN(discountRaw) || discountRaw <= 0 || discountRaw > 100) { alert('Discount must be between 1 and 100%.'); return; }
+
+  const saveBtn = document.querySelector('#promoModal .btn-admin-primary');
+  const originalText = saveBtn ? saveBtn.textContent : 'Save Promo Code';
+  if (saveBtn) { saveBtn.textContent = '⏳ Saving...'; saveBtn.disabled = true; }
+
+  const data = {
+    code,
+    discount_percent: discountRaw,
+    description: description || null,
+    max_uses: maxUsesRaw ? parseInt(maxUsesRaw) : null,
+    expires_at: expiresRaw ? new Date(expiresRaw).toISOString() : null,
+    is_active: isActive,
+    updated_at: new Date().toISOString()
+  };
+
+  try {
+    if (id) {
+      await adminPatch('promo_codes', data, { 'id': `eq.${id}` });
+      showToast('Promo code updated successfully!');
+    } else {
+      data.usage_count = 0;
+      await adminPost('promo_codes', data);
+      showToast('Promo code created successfully!');
+    }
+    closeModal('promoModalOverlay');
+    allPromoCodes = await adminFetch('promo_codes', { select: '*', order: 'created_at.desc' });
+    renderPromoCodes();
+  } catch(e) {
+    alert('Error saving promo code: ' + e.message);
+  } finally {
+    if (saveBtn) { saveBtn.textContent = originalText; saveBtn.disabled = false; }
+  }
+}
+window.savePromoCode = savePromoCode;
+
+async function deletePromoCode(id) {
+  if (!confirm('Delete this promo code? Customers will no longer be able to use it.')) return;
+  try {
+    await adminDelete('promo_codes', { 'id': `eq.${id}` });
+    showToast('Promo code deleted');
+    allPromoCodes = await adminFetch('promo_codes', { select: '*', order: 'created_at.desc' });
+    renderPromoCodes();
+  } catch(e) {
+    alert('Error deleting promo code: ' + e.message);
+  }
+}
+window.deletePromoCode = deletePromoCode;

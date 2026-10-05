@@ -288,3 +288,93 @@
   .payment-methods-grid { grid-template-columns: repeat(2,1fr); }
   .co-step-line { width: 30px; }
 }
+
+/* ── Minimum Order Notice ── */
+.min-order-notice {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  background: rgba(231,76,60,.08);
+  border: 1.5px solid rgba(231,76,60,.3);
+  border-radius: 10px;
+  padding: .75rem 1rem;
+  margin-bottom: 1rem;
+  font-family: 'Inter', sans-serif;
+  font-size: .82rem;
+  color: #c0392b;
+  line-height: 1.5;
+  animation: slideDown .3s ease;
+}
+.min-order-notice strong { font-weight: 700; }
+
+/* ── Promo Code Section ── */
+.promo-code-section {
+  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 1rem 0;
+  margin-bottom: 1rem;
+}
+.promo-code-label {
+  font-family: 'Inter', sans-serif;
+  font-size: .82rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: .6rem;
+}
+.promo-code-label span {
+  font-weight: 400;
+  color: #C8A96A;
+}
+.promo-input-row {
+  display: flex;
+  gap: .5rem;
+}
+.promo-input-row input {
+  flex: 1;
+  padding: .7rem 1rem;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: .88rem;
+  color: #111;
+  background: #fff;
+  outline: none;
+  transition: border-color .2s;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.promo-input-row input:focus {
+  border-color: #C8A96A;
+  box-shadow: 0 0 0 3px rgba(200,169,106,.12);
+}
+.promo-input-row button {
+  padding: .7rem 1.25rem;
+  background: #06332F;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .2s, transform .1s;
+}
+.promo-input-row button:hover { background: #0B4A43; }
+.promo-input-row button:active { transform: scale(.97); }
+.promo-input-row button:disabled { opacity: .6; cursor: not-allowed; }
+
+.promo-message {
+  font-family: 'Inter', sans-serif;
+  font-size: .8rem;
+  margin-top: .5rem;
+  min-height: 1.2em;
+  transition: all .2s;
+}
+.promo-msg-success { color: #27ae60; font-weight: 600; }
+.promo-msg-error { color: #e74c3c; }
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
