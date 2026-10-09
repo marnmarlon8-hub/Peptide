@@ -497,7 +497,8 @@ async function sendInvoiceEmail(order, items) {
           <p style="margin:0 0 16px 0;font-size:14px;line-height:1.75;color:rgba(255,255,255,0.88);">
             Thank you for your order, <strong style="color:#fff;">${order.full_name}</strong>. Your research order is currently
             <strong style="color:#C8A96A;">pending payment</strong>. To finalise your order, please send
-            <strong style="color:#C8A96A;">$${totalAmt} USD</strong> via <strong style="color:#fff;">${order.payment_method}</strong>.
+            <strong style="color:#C8A96A;">$${totalAmt} USD</strong> via <strong style="color:#fff;">${order.payment_method}</strong>,
+            by texting or messaging us at the number below:
           </p>
           <div style="background:rgba(200,169,106,0.12);border:1.5px solid rgba(200,169,106,0.45);border-radius:10px;padding:16px 20px;text-align:center;margin-bottom:16px;">
             <p style="margin:0 0 4px 0;font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.15em;">Text or Message Us to Confirm Payment</p>
